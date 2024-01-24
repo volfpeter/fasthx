@@ -4,22 +4,22 @@ jobs:
   Linters:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
+          # Issue ref: https://github.com/actions/setup-python/issues/436
+          # cache: "pip"
+          cache-dependency-path: pyproject.toml
           python-version-file: pyproject.toml
 
       - name: Install poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+        run: curl -sSL https://install.python-poetry.org | python3 -
 
       - name: Install dependencies
-        run: |
-          poetry install
+        run: poetry install
 
       - name: Run static checks
-        run: |
-          poetry run poe static-checks
+        run: poetry run poe static-checks

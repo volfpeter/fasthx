@@ -1,8 +1,17 @@
-name: Tests
-on: push
+name: Publish
+
+on:
+  release:
+    types:
+      - created
+
 jobs:
-  Linters:
+  pypi-publish:
+    name: Upload release to PyPI
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,5 +30,8 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      - name: Run tests
-        run: poetry run poe test
+      - name: Build package to dist/
+        run: poetry build
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
