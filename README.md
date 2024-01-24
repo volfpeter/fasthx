@@ -88,18 +88,15 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
     users = "".join(("<ul>", *(f"<li>{u.name}</li>" for u in result), "</ul>"))
     return f"{lucky_number}\n{users}"
 
-
 @app.get("/htmx-or-data")
 @hx(render_user_list)
 def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
 
-
 @app.get("/htmx-only")
 @hx(render_user_list, no_data=True)
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
-
 ```
 
 ## Dependencies
