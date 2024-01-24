@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Annotated, Any, ParamSpec, Protocol, TypeVar
 
-from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi import Depends, Header, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -58,12 +58,12 @@ class HTMXRenderer(Protocol[_Tcontra]):
         ...
 
 
-def get_hx_request(request: Request) -> Request | None:
+def get_hx_request(request: Request, hx_request: Annotated[str | None, Header()] = None) -> Request | None:
     """
     FastAPI dependency that returns the current request if it is an HTMX one,
     i.e. it contains an `"HX-Request: true"` header.
     """
-    return request if request.headers.get("hx-request") == "true" else None
+    return request if hx_request == "true" else None
 
 
 DependsHXRequest = Annotated[Request | None, Depends(get_hx_request)]

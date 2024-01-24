@@ -87,7 +87,7 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
     # The value of the `DependsRandomNumber` dependency is accessible with the same name as in the route.
     random_number = context["random_number"]
     lucky_number = f"<h1>{random_number}</h1>"
-    users = "".join(("<ul>", *(f"<li>{u.name}</li>" for u in result), "</ul>"))
+    users = "".join(("<ul>", *(f"<li>{u['name']}</li>" for u in result), "</ul>"))
     return f"{lucky_number}\n{users}"
 
 @app.get("/htmx-or-data")
@@ -99,6 +99,7 @@ def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
 @hx(render_user_list, no_data=True)
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
+
 ```
 
 ## Dependencies
