@@ -59,6 +59,8 @@ def htmx_only() -> dict[str, list[dict[str, str]]]:
     return {"users": [{"name": "Joe"}]}
 ```
 
+For full examples, see the [examples/template-with-jinja](https://github.com/volfpeter/fasthx/tree/main/examples) folder.
+
 ### Custom templating
 
 Custom templating offers more flexibility than the built-in `Jinja` renderer by giving access to all dependencies of the decorated route to the renderer function:
