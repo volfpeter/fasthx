@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "fasthx"
+version = "0.2401.0"
+description = "FastAPI data APIs with HTMX support."
+authors = ["Peter Volf <do.volfp@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = ">=0.100.0"
+
+[tool.poetry.group.dev.dependencies]
+httpx = "^0.26.0"
+jinja2 = "^3.1.3"
+mkdocs-material = "^9.5.5"
+mkdocstrings = {extras = ["python"], version = "^0.24.0"}
+mypy = "^1.8.0"
+poethepoet = "^0.24.4"
+pytest = "^7.4.4"
+ruff = "^0.1.13"
+uvicorn = "^0.26.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+strict = true
+show_error_codes = true
+
+[tool.ruff]
+line-length = 108
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "dist",
+    "docs",
+]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "S",  # flake8-bandit - we must ignore these rules in tests
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+
+[tool.ruff.per-file-ignores]
+"tests/**/*" = ["S101"]  # S101: use of assert detected
+
+[tool.poe.tasks]
+check-format = "ruff format --check ."
+format = "ruff format ."
+lint = "ruff check ."
+lint-fix = "ruff . --fix"
+mypy = "mypy ."
+test = "python -m pytest tests  --random-order"
+static-checks.sequence = ["lint", "check-format", "mypy"]
+static-checks.ignore_fail = "return_non_zero"
+serve-docs = "mkdocs serve"

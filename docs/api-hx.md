@@ -1,0 +1,3 @@
+# `hx()`
+
+::: fasthx.main.hx

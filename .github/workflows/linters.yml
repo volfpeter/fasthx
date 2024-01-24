@@ -1,0 +1,25 @@
+name: Linters
+on: push
+jobs:
+  Linters:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python
+        uses: actions/setup-python@v4
+        with:
+          python-version-file: pyproject.toml
+
+      - name: Install poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      - name: Run static checks
+        run: |
+          poetry run poe static-checks

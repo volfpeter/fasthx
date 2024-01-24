@@ -1,0 +1,3 @@
+# `HTMXRenderer`
+
+::: fasthx.main.HTMXRenderer
