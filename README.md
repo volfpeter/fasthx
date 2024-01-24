@@ -116,6 +116,11 @@ The documentation is built with `mkdocs-material` and `mkdocstrings`.
 
 All contributions are welcome.
 
+## Contributors
+
+- [Peter Volf](https://github.com/volfpeter)
+- [Hasan Sezer Taşan](https://github.com/hasansezertasan)
+
 ## License - MIT
 
 The package is open-sourced under the conditions of the [MIT license](https://choosealicense.com/licenses/mit/).
