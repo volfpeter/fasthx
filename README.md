@@ -14,7 +14,7 @@ FastAPI and HTMX, the right way.
 Key features:
 
 - **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
-- Works with **any templating engine** or server-side rendering rendering library, e.g. `markyp-html` or `dominate`.
+- Works with **any templating engine** or server-side rendering library, e.g. `markyp-html` or `dominate`.
 - Built-in **Jinja2 templating support** (even with multiple template folders).
 - Gives the rendering engine **access to all dependencies** of the decorated route.
 - FastAPI **routes will keep working normally by default** if they receive **non-HTMX** requests, so the same route can serve data and render HTML at the same time.
