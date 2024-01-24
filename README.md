@@ -64,10 +64,13 @@ def htmx_only() -> dict[str, list[dict[str, str]]]:
 Custom templating offers more flexibility than the built-in `Jinja` renderer by giving access to all dependencies of the decorated route to the renderer function:
 
 ```python
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fasthx import hx
+
+# Create the app.
+app = FastAPI()
 
 # Create a dependecy to see that its return value is available in the render function.
 def get_random_number() -> int:
@@ -85,15 +88,18 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
     users = "".join(("<ul>", *(f"<li>{u.name}</li>" for u in result), "</ul>"))
     return f"{lucky_number}\n{users}"
 
+
 @app.get("/htmx-or-data")
 @hx(render_user_list)
 def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
 
+
 @app.get("/htmx-only")
 @hx(render_user_list, no_data=True)
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
+
 ```
 
 ## Dependencies
