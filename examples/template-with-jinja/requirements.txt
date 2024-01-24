@@ -1,0 +1,3 @@
+uvicorn
+fasthx
+jinja2
