@@ -59,7 +59,7 @@ def htmx_only() -> dict[str, list[dict[str, str]]]:
     return {"users": [{"name": "Joe"}]}
 ```
 
-For full examples, see the [examples/template-with-jinja](https://github.com/volfpeter/fasthx/tree/main/examples) folder.
+For full example, see the [examples/template-with-jinja](https://github.com/volfpeter/fasthx/tree/main/examples) folder.
 
 ### Custom templating
 
