@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block header %}
+<title>fasthx example with Jinja2</title>
+{% endblock header %}
+
+{% block content %}
+
+<h1 class="mb-3">fasthx example with Jinja2</h1>
+
+<p class="my-3">Normal Request to `/user-list` endpoint</p>
+<a href="/user-list">Get User List Data</a>
+
+
+<p class="my-3">HTMX Request to `/user-list` endpoint</p>
+<button type="button" class="btn btn-primary" hx-get="/user-list/" hx-swap="outerHTML">User List Data</button>
+
+<p class="my-3">Normal Request to `/admin-list` endpoint</p>
+<a href="/admin-list">Get Admin List Data</a>
+
+
+<p class="my-3">HTMX Request to `/admin-list` endpoint</p>
+<button type="button" class="btn btn-primary" hx-get="/admin-list/" hx-swap="outerHTML">Admin List Data</button>
+
+{% endblock content %}
