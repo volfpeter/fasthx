@@ -139,6 +139,7 @@ class Jinja:
         """
 
         def render(result: Any, *, context: dict[str, Any], request: Request) -> HTMLResponse:
+            request.state.depends = context
             return self.templates.TemplateResponse(name=template_name, request=request, context=result)
 
         return hx(render, no_data=no_data)
