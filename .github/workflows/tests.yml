@@ -16,7 +16,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install poetry
-        run: curl -sSL https://install.python-poetry.org | python3 -
+        run: python3 -m pip install poetry
 
       - name: Install dependencies
         run: poetry install
