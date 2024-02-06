@@ -1,3 +1,5 @@
+"""FastHX: FastAPI and HTMX, the right way."""
+
 import inspect
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -17,10 +19,10 @@ def _append_to_signature(
     func: Callable[_P, _T],
     *params: inspect.Parameter,
 ) -> Callable[_P, _T]:
-    """
-    Appends the given parameters to the *end* of signature of the given function.
+    """Appends the given parameters to the *end* of signature of the given function.
 
     Notes:
+    -----
         - This method does not change the function's arguments, it only makes FastAPI's
         dependency resolution system recognize inserted parameters.
         - This is *not* a general purpose method, it is strongly recommended to only
@@ -28,41 +30,43 @@ def _append_to_signature(
         be already in the function's signature.
 
     Arguments:
+    ---------
         func: The function whose signature should be extended.
         params: The parameters to add to the function's signature.
 
     Returns:
+    -------
         The received function with an extended `__signature__`.
-    """
+
+    """  # noqa: D401
     signature = inspect.signature(func)
     func.__signature__ = signature.replace(parameters=(*signature.parameters.values(), *params))  # type: ignore[attr-defined]
     return func
 
 
 class HTMXRenderer(Protocol[_Tcontra]):
-    """
-    HTMX renderer definition.
+    """HTMX renderer definition.
 
     Arguments:
+    ---------
         result: The result of the route the renderer is used on.
         context: Every keyword argument the route received.
         request: The request being served.
 
     Returns:
+    -------
         HTML string (it will be automatically converted to `HTMLResponse`) or a `Response` object.
+
     """
 
-    def __call__(
+    def __call__(  # noqa: D102
         self, result: _Tcontra, *, context: dict[str, Any], request: Request
     ) -> str | Response | Awaitable[str | Response]:
         ...
 
 
 def get_hx_request(request: Request, hx_request: Annotated[str | None, Header()] = None) -> Request | None:
-    """
-    FastAPI dependency that returns the current request if it is an HTMX one,
-    i.e. it contains an `"HX-Request: true"` header.
-    """
+    """FastAPI dependency that returns the current request if it is an HTMX one, i.e. it contains an `"HX-Request: true"` header."""
     return request if hx_request == "true" else None
 
 
@@ -73,14 +77,15 @@ DependsHXRequest = Annotated[Request | None, Depends(get_hx_request)]
 def hx(
     render: HTMXRenderer[_T], *, no_data: bool = False
 ) -> Callable[[Callable[_P, _T | Awaitable[_T]]], Callable[_P, Awaitable[_T | Response]]]:
-    """
-    Decorator that converts a FastAPI route's return value into HTML if the request was
+    """Decorator that converts a FastAPI route's return value into HTML if the request was
     an HTMX one.
 
     Arguments:
+    ---------
         render: The render function converting the route's return value to HTML.
         no_data: If set, the route will only accept HTMX requests.
-    """
+
+    """  # noqa: D205, D401
 
     def decorator(
         func: Callable[_P, _T | Awaitable[_T]],
@@ -129,17 +134,19 @@ class Jinja:
     def __call__(
         self, template_name: str, *, no_data: bool = False
     ) -> Callable[[Callable[_P, Any | Awaitable[Any]]], Callable[_P, Awaitable[Any | Response]]]:
-        """
-        Decorator for rendering a route's return value to HTML using the Jinja2 template
+        """Decorator for rendering a route's return value to HTML using the Jinja2 template
         with the given name.
 
         Arguments:
+        ---------
             template_name: The name of the Jinja2 template to use.
             no_data: If set, the route will only accept HTMX requests.
-        """
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> HTMLResponse:
-            return self.templates.TemplateResponse(name=template_name, request=request, context=result)
+        """  # noqa: D205, D401
+
+        def render(result: Any, *, context: dict[str, Any], request: Request): # type: ignore[no-untyped-def]
+            context_with_request = {"request": request, **context}
+            return self.templates.TemplateResponse(name=template_name, context=context_with_request)
 
         return hx(render, no_data=no_data)
 
