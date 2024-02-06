@@ -1,5 +1,14 @@
 name: Tests
-on: push
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
 jobs:
   Linters:
     runs-on: ubuntu-latest
