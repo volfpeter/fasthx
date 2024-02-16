@@ -9,11 +9,14 @@ class User(BaseModel):
     name: str
     active: bool
 
+    def __hash__(self) -> int:
+        return hash((User, self.name, self.active))
 
-users: list[User] = [
-    User(name="Billy Shears", active=True),
-    User(name="Lucy", active=True),
-]
+
+billy = User(name="Billy Shears", active=True)
+lucy = User(name="Lucy", active=True)
+
+users: list[User] = [billy, lucy]
 
 
 def get_random_number() -> int:
@@ -22,5 +25,9 @@ def get_random_number() -> int:
 
 DependsRandomNumber = Annotated[int, Depends(get_random_number)]
 
-html_user_list = "<ul><li>Billy Shears (active=True)</li><li>Lucy (active=True)</li></ul>"
-json_user_list = to_json(users).decode()
+billy_html = "<span>Billy Shears (active=True)</span>"
+billy_json = billy.model_dump_json()
+lucy_html = "<span>Lucy (active=True)</span>"
+lucy_json = lucy.model_dump_json()
+user_list_html = "<ul><li>Billy Shears (active=True)</li><li>Lucy (active=True)</li></ul>"
+user_list_json = to_json(users).decode()

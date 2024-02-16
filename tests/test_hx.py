@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from fasthx import hx
 
-from .data import DependsRandomNumber, User, html_user_list, json_user_list, users
+from .data import DependsRandomNumber, User, user_list_html, user_list_json, users
 
 
 def render_user_list(result: list[User], *, context: dict[str, Any], request: Request) -> str:
@@ -45,10 +45,10 @@ def hx_client(hx_app: FastAPI) -> TestClient:
 @pytest.mark.parametrize(
     ("route", "headers", "status", "expected"),
     (
-        ("/htmx-or-data", {"HX-Request": "true"}, 200, html_user_list),
-        ("/htmx-or-data", None, 200, json_user_list),
-        ("/htmx-or-data", {"HX-Request": "false"}, 200, json_user_list),
-        ("/htmx-only", {"HX-Request": "true"}, 200, html_user_list),
+        ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html),
+        ("/htmx-or-data", None, 200, user_list_json),
+        ("/htmx-or-data", {"HX-Request": "false"}, 200, user_list_json),
+        ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html),
         ("/htmx-only", None, 400, ""),
         ("/htmx-only", {"HX-Request": "false"}, 400, ""),
     ),
