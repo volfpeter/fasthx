@@ -36,9 +36,18 @@ $ pip install fasthx
 To start serving HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use it as a decorator on your routes like this:
 
 ```python
-from fastapi import FastAPI
+import os
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fasthx import Jinja
+from pydantic import BaseModel
+
+# Pydantic model of the data the example API is using.
+class User(BaseModel):
+    first_name: str
+    last_name: str
 
 # Create the app.
 app = FastAPI()
@@ -47,16 +56,20 @@ app = FastAPI()
 # FastHX Jinja instance that will serve as your decorator.
 jinja = Jinja(Jinja2Templates("templates"))
 
-@app.get("/htmx-or-data")
-@jinja("user-list.html")  # Render the response with the user-list.html template.
-def htmx_or_data() -> dict[str, list[dict[str, str]]]:
-    return {"users": [{"name": "Joe"}]}
+@app.get("/user-list")
+@jinja("user-list.html")
+def htmx_or_data() -> set[User]:
+    return {
+        User(first_name="John", last_name="Lennon"),
+        User(first_name="Paul", last_name="McCartney"),
+        User(first_name="George", last_name="Harrison"),
+        User(first_name="Ringo", last_name="Starr"),
+    }
 
-@app.get("/htmx-only")
-@jinja.template("user-list.html", no_data=True)  # Render the response with the user-list.html template.
-def htmx_only() -> dict[str, list[dict[str, str]]]:
-    # no_data is set to True, so this route can not serve JSON, it only responds to HTMX requests.
-    return {"users": [{"name": "Joe"}]}
+@app.get("/admin-list")
+@jinja.template("user-list.html", no_data=True)
+def htmx_only() -> list[User]:
+    return [User(first_name="Billy", last_name="Shears")]
 ```
 
 For full example, see the [examples/template-with-jinja](https://github.com/volfpeter/fasthx/tree/main/examples) folder.

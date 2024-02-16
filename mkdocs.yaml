@@ -45,6 +45,7 @@ nav:
   - API Reference:
       - api-hx.md
       - api-Jinja.md
+      - api-JinjaContext.md
       - api-HTMXRenderer.md
       - api-get_hx_request.md
       - api-DependsHXRequest.md
