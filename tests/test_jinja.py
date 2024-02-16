@@ -33,8 +33,8 @@ def jinja_app() -> FastAPI:
 
     @app.get("/htmx-only")
     @jinja("user-list.html", no_data=True)
-    async def htmx_only(random_number: DependsRandomNumber) -> set[User]:
-        return {billy, lucy}
+    async def htmx_only(random_number: DependsRandomNumber) -> tuple[User, ...]:
+        return (billy, lucy)
 
     @app.get("/htmx-only-with-template-alias")
     @jinja.template(
