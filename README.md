@@ -36,10 +36,7 @@ $ pip install fasthx
 To start serving HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use it as a decorator on your routes like this:
 
 ```python
-import os
-
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 from fasthx import Jinja
 from pydantic import BaseModel
@@ -58,13 +55,13 @@ jinja = Jinja(Jinja2Templates("templates"))
 
 @app.get("/user-list")
 @jinja("user-list.html")
-def htmx_or_data() -> set[User]:
-    return {
+def htmx_or_data() -> list[User]:
+    return [
         User(first_name="John", last_name="Lennon"),
         User(first_name="Paul", last_name="McCartney"),
         User(first_name="George", last_name="Harrison"),
         User(first_name="Ringo", last_name="Starr"),
-    }
+    ]
 
 @app.get("/admin-list")
 @jinja.template("user-list.html", no_data=True)
