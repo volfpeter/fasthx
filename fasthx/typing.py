@@ -47,6 +47,9 @@ class AsyncHTMLRenderer(Protocol[Tcontra]):
 HTMLRenderer = SyncHTMLRenderer[Tcontra] | AsyncHTMLRenderer[Tcontra]
 """Sync or async HTML renderer type."""
 
+HTMXRenderer = HTMLRenderer[T]
+"""Deprecated alias of `HTMLRenderer`. It will be removed in the future."""
+
 
 class JinjaContextFactory(Protocol):
     """
