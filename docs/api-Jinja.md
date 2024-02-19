@@ -1,3 +1,0 @@
-# `Jinja`
-
-::: fasthx.main.Jinja

@@ -1,3 +1,0 @@
-# `JinjaContext`
-
-::: fasthx.main.JinjaContext

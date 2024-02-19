@@ -1,7 +1,6 @@
 import os
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -27,7 +26,7 @@ jinja = Jinja(templates)
 
 
 @app.get("/user-list")
-@jinja("user-list.html")  # Render the response with the user-list.html template.
+@jinja.hx("user-list.html")  # Render the response with the user-list.html template.
 def htmx_or_data() -> tuple[User, ...]:
     """This route can serve both JSON and HTML, depending on if the request is an HTMX request or not."""
     return (
@@ -37,13 +36,14 @@ def htmx_or_data() -> tuple[User, ...]:
 
 
 @app.get("/admin-list")
-@jinja.template("user-list.html", no_data=True)  # Render the response with the user-list.html template.
+@jinja.hx("user-list.html", no_data=True)  # Render the response with the user-list.html template.
 def htmx_only() -> list[User]:
     """This route can only serve HTML, because the no_data parameter is set to True."""
     return [User(first_name="John", last_name="Doe")]
 
 
 @app.get("/")
-def index(request: Request) -> HTMLResponse:
+@jinja.page("index.html")
+def index() -> None:
     """This route serves the index.html template."""
-    return templates.TemplateResponse("index.html", context={"request": request})
+    ...
