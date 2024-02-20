@@ -16,34 +16,25 @@ def jinja_app() -> FastAPI:
 
     jinja = Jinja(Jinja2Templates("tests/templates"))
 
+    @app.get("/")
+    @jinja.page("user-list.html")
+    def index() -> list[User]:
+        return users
+
     @app.get("/htmx-or-data")
-    @jinja("user-list.html")
+    @jinja.hx("user-list.html")
     def htmx_or_data() -> dict[str, list[User]]:
         return {"items": users}
 
-    @app.get("/htmx-or-data-with-template-alias")
-    @jinja.template("user-list.html")
-    def htmx_or_data_with_template_alias() -> list[User]:
-        return users
-
     @app.get("/htmx-or-data/<id>")
-    @jinja("profile.html")
+    @jinja.hx("profile.html")
     def htmx_or_data_by_id(id: int) -> User:
         return billy
 
     @app.get("/htmx-only")
-    @jinja("user-list.html", no_data=True)
+    @jinja.hx("user-list.html", no_data=True)
     async def htmx_only(random_number: DependsRandomNumber) -> tuple[User, ...]:
         return (billy, lucy)
-
-    @app.get("/htmx-only-with-template-alias")
-    @jinja.template(
-        "random_number.html",
-        no_data=True,
-        make_context=JinjaContext.unpack_result_with_route_context,
-    )
-    async def htmx_only_with_template_alias(random_number: DependsRandomNumber) -> list[User]:
-        return users
 
     return app
 
@@ -56,18 +47,18 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
 @pytest.mark.parametrize(
     ("route", "headers", "status", "expected"),
     (
+        # jinja.page() - always renders the HTML result.
+        ("/", {"HX-Request": "true"}, 200, user_list_html),
+        ("/", None, 200, user_list_html),
+        ("/", {"HX-Request": "false"}, 200, user_list_html),
+        # jinja.hx() - returns JSON for non-HTMX requests.
         ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html),
         ("/htmx-or-data", None, 200, f'{{"items":{user_list_json}}}'),
         ("/htmx-or-data", {"HX-Request": "false"}, 200, f'{{"items":{user_list_json}}}'),
-        ("/htmx-or-data-with-template-alias", {"HX-Request": "true"}, 200, user_list_html),
-        ("/htmx-or-data-with-template-alias", None, 200, user_list_json),
-        ("/htmx-or-data-with-template-alias", {"HX-Request": "false"}, 200, user_list_json),
+        # jinja.hy(no_data=True) - raises exception for non-HTMX requests.
         ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html),
         ("/htmx-only", None, 400, ""),
         ("/htmx-only", {"HX-Request": "false"}, 400, ""),
-        ("/htmx-only-with-template-alias", {"HX-Request": "true"}, 200, "<h1>4</h1>"),
-        ("/htmx-only-with-template-alias", None, 400, ""),
-        ("/htmx-only-with-template-alias", {"HX-Request": "false"}, 400, ""),
     ),
 )
 def test_jinja(
@@ -108,3 +99,9 @@ class TestJinjaContext:
             route_result=route_result, route_context=route_context
         )
         assert result == {**route_context, **route_converted}
+
+    def test_unpack_result_with_route_context_conflict(self) -> None:
+        with pytest.raises(ValueError):
+            JinjaContext.unpack_result_with_route_context(
+                route_result=billy, route_context={"name": "Not Billy"}
+            )

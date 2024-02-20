@@ -1,0 +1,3 @@
+# `page()`
+
+::: fasthx.page

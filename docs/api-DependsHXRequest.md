@@ -1,3 +1,0 @@
-# `DependsHXRequest`
-
-::: fasthx.main.DependsHXRequest

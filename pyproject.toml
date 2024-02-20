@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "0.2402.1"
+version = "0.2402.2"
 description = "FastAPI data APIs with HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
@@ -9,18 +9,19 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = ">=0.100.0"
+typing-extensions = ">=4.5.0"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.26.0"
 jinja2 = "^3.1.3"
-mkdocs-material = "^9.5.5"
+mkdocs-material = "^9.5.9"
 mkdocstrings = {extras = ["python"], version = "^0.24.0"}
 mypy = "^1.8.0"
 poethepoet = "^0.24.4"
-pytest = "^7.4.4"
+pytest = "^8.0.1"
 pytest-random-order = "^1.1.1"
-ruff = "^0.1.13"
-uvicorn = "^0.26.0"
+ruff = "^0.2.2"
+uvicorn = "^0.27.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -41,7 +42,7 @@ exclude = [
     "dist",
     "docs",
 ]
-select = [
+lint.select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -51,7 +52,7 @@ select = [
     "B",  # flake8-bugbear
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/**/*" = ["S101"]  # S101: use of assert detected
 
 [tool.poe.tasks]

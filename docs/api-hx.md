@@ -1,3 +1,3 @@
 # `hx()`
 
-::: fasthx.main.hx
+::: fasthx.hx

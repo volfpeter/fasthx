@@ -43,9 +43,8 @@ markdown_extensions:
 nav:
   - index.md
   - API Reference:
-      - api-hx.md
-      - api-Jinja.md
-      - api-JinjaContext.md
-      - api-HTMXRenderer.md
-      - api-get_hx_request.md
-      - api-DependsHXRequest.md
+      - hx(): api-hx.md
+      - page(): api-page.md
+      - Jinja: api-jinja.md
+      - HTMLRenderer: api-HTMLRenderer.md
+      - Dependencies: api-dependencies.md
