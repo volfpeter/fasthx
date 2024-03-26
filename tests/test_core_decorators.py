@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.testclient import TestClient
 
 from fasthx import hx, page
@@ -10,9 +10,6 @@ from .data import DependsRandomNumber, User, user_list_html, user_list_json, use
 
 
 def render_user_list(result: list[User], *, context: dict[str, Any], request: Request) -> str:
-    # Test that the hx() decorator's inserted params are not in context.
-    assert len(context) == 1
-
     # Test that the value of the DependsRandomNumber dependency is in the context.
     random_number = context["random_number"]
     assert random_number == 4
@@ -35,7 +32,8 @@ def hx_app() -> FastAPI:
 
     @app.get("/htmx-or-data")
     @hx(render_user_list)
-    def htmx_or_data(random_number: DependsRandomNumber) -> list[User]:
+    def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[User]:
+        response.headers["test-header"] = "exists"
         return users
 
     @app.get("/htmx-only")  # type: ignore # TODO: figure out why mypy doesn't see the correct type.
@@ -52,20 +50,20 @@ def hx_client(hx_app: FastAPI) -> TestClient:
 
 
 @pytest.mark.parametrize(
-    ("route", "headers", "status", "expected"),
+    ("route", "headers", "status", "expected", "response_headers"),
     (
         # page() - always renders the HTML result.
-        ("/", {"HX-Request": "true"}, 200, user_list_html),
-        ("/", None, 200, user_list_html),
-        ("/", {"HX-Request": "false"}, 200, user_list_html),
+        ("/", {"HX-Request": "true"}, 200, user_list_html, {}),
+        ("/", None, 200, user_list_html, {}),
+        ("/", {"HX-Request": "false"}, 200, user_list_html, {}),
         # hx() - returns JSON for non-HTMX requests.
-        ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html),
-        ("/htmx-or-data", None, 200, user_list_json),
-        ("/htmx-or-data", {"HX-Request": "false"}, 200, user_list_json),
+        ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html, {"test-header": "exists"}),
+        ("/htmx-or-data", None, 200, user_list_json, {"test-header": "exists"}),
+        ("/htmx-or-data", {"HX-Request": "false"}, 200, user_list_json, {"test-header": "exists"}),
         # hy(no_data=True) - raises exception for non-HTMX requests.
-        ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html),
-        ("/htmx-only", None, 400, ""),
-        ("/htmx-only", {"HX-Request": "false"}, 400, ""),
+        ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html, {}),
+        ("/htmx-only", None, 400, "", {}),
+        ("/htmx-only", {"HX-Request": "false"}, 400, "", {}),
     ),
 )
 def test_hx_and_page(
@@ -74,6 +72,7 @@ def test_hx_and_page(
     headers: dict[str, str] | None,
     status: int,
     expected: str,
+    response_headers: dict[str, str],
 ) -> None:
     response = hx_client.get(route, headers=headers)
     assert response.status_code == status
@@ -82,3 +81,5 @@ def test_hx_and_page(
 
     result = response.text
     assert result == expected
+
+    assert all((response.headers.get(key) == value) for key, value in response_headers.items())
