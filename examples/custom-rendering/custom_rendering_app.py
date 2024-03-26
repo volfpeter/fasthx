@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Response
 
 from fasthx import hx, page
 
@@ -39,7 +39,8 @@ def index() -> None:
 
 @app.get("/htmx-or-data")
 @hx(render_user_list)
-def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
+def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[dict[str, str]]:
+    response.headers["my-response-header"] = "works"
     return [{"name": "Joe"}]
 
 
