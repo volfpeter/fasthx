@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 
 from .dependencies import DependsHXRequest
 from .typing import HTMLRenderer, MaybeAsyncFunc, P, T
-from .utils import append_to_signature, execute_maybe_sync_func
+from .utils import append_to_signature, execute_maybe_sync_func, get_response
 
 
 def hx(
@@ -40,8 +40,13 @@ def hx(
             if __hx_request is None or isinstance(result, Response):
                 return result
 
+            response = get_response(kwargs)
             rendered = await execute_maybe_sync_func(render, result, context=kwargs, request=__hx_request)
-            return HTMLResponse(rendered) if isinstance(rendered, str) else rendered
+            return (
+                HTMLResponse(rendered, headers=None if response is None else response.headers)
+                if isinstance(rendered, str)
+                else rendered
+            )
 
         return append_to_signature(
             wrapper,  # type: ignore[arg-type]
@@ -72,10 +77,15 @@ def page(
             if isinstance(result, Response):
                 return result
 
+            response = get_response(kwargs)
             rendered: str | Response = await execute_maybe_sync_func(
                 render, result, context=kwargs, request=__page_request
             )
-            return HTMLResponse(rendered) if isinstance(rendered, str) else rendered
+            return (
+                HTMLResponse(rendered, headers=None if response is None else response.headers)
+                if isinstance(rendered, str)
+                else rendered
+            )
 
         return append_to_signature(
             wrapper,  # type: ignore[arg-type]
