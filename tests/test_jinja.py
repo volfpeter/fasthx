@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.testclient import TestClient
 
@@ -23,7 +23,8 @@ def jinja_app() -> FastAPI:
 
     @app.get("/htmx-or-data")
     @jinja.hx("user-list.html")
-    def htmx_or_data() -> dict[str, list[User]]:
+    def htmx_or_data(response: Response) -> dict[str, list[User]]:
+        response.headers["test-header"] = "exists"
         return {"items": users}
 
     @app.get("/htmx-or-data/<id>")
@@ -45,20 +46,26 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
 
 
 @pytest.mark.parametrize(
-    ("route", "headers", "status", "expected"),
+    ("route", "headers", "status", "expected", "response_headers"),
     (
         # jinja.page() - always renders the HTML result.
-        ("/", {"HX-Request": "true"}, 200, user_list_html),
-        ("/", None, 200, user_list_html),
-        ("/", {"HX-Request": "false"}, 200, user_list_html),
+        ("/", {"HX-Request": "true"}, 200, user_list_html, {}),
+        ("/", None, 200, user_list_html, {}),
+        ("/", {"HX-Request": "false"}, 200, user_list_html, {}),
         # jinja.hx() - returns JSON for non-HTMX requests.
-        ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html),
-        ("/htmx-or-data", None, 200, f'{{"items":{user_list_json}}}'),
-        ("/htmx-or-data", {"HX-Request": "false"}, 200, f'{{"items":{user_list_json}}}'),
+        ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html, {"test-header": "exists"}),
+        ("/htmx-or-data", None, 200, f'{{"items":{user_list_json}}}', {"test-header": "exists"}),
+        (
+            "/htmx-or-data",
+            {"HX-Request": "false"},
+            200,
+            f'{{"items":{user_list_json}}}',
+            {"test-header": "exists"},
+        ),
         # jinja.hy(no_data=True) - raises exception for non-HTMX requests.
-        ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html),
-        ("/htmx-only", None, 400, ""),
-        ("/htmx-only", {"HX-Request": "false"}, 400, ""),
+        ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html, {}),
+        ("/htmx-only", None, 400, "", {}),
+        ("/htmx-only", {"HX-Request": "false"}, 400, "", {}),
     ),
 )
 def test_jinja(
@@ -67,6 +74,7 @@ def test_jinja(
     headers: dict[str, str] | None,
     status: int,
     expected: str,
+    response_headers: dict[str, str],
 ) -> None:
     response = jinja_client.get(route, headers=headers)
     assert response.status_code == status
@@ -75,6 +83,8 @@ def test_jinja(
 
     result = response.text
     assert result == expected
+
+    assert all((response.headers.get(key) == value) for key, value in response_headers.items())
 
 
 class TestJinjaContext:

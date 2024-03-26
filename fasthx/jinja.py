@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Any, Coroutine
 
 from fastapi import Request, Response
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from typing_extensions import deprecated
 
@@ -152,7 +151,7 @@ class Jinja:
             # No route-specific override.
             make_context = self.make_context
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> HTMLResponse:
+        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
             return self._make_response(
                 template_name,
                 jinja_context=make_context(route_result=result, route_context=context),
@@ -177,7 +176,7 @@ class Jinja:
             # No route-specific override.
             make_context = self.make_context
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> HTMLResponse:
+        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
             return self._make_response(
                 template_name,
                 jinja_context=make_context(route_result=result, route_context=context),
@@ -215,8 +214,20 @@ class Jinja:
         *,
         jinja_context: dict[str, Any],
         request: Request,
-    ) -> HTMLResponse:
+    ) -> str | Response:
         """
         Creates the HTML response using the given Jinja template name and context.
         """
-        return self.templates.TemplateResponse(name=template_name, context=jinja_context, request=request)
+        # The reason for returning string from this method is to let `hx()` or `page()` create
+        # the HTML response - that way they can copy response headers and do other convenience
+        # conversions.
+        # The drawback is that users lose some of the baked-in debug utilities of TemplateResponse.
+        # This can be worked around by using a rendering context factory that includes the route's
+        # dependencies in the Jinja context. Then this method can be overridden to take the Response
+        # object from the context and copy the header from it into TemplateResponse.
+        result = self.templates.TemplateResponse(
+            name=template_name,
+            context=jinja_context,
+            request=request,
+        )
+        return result.body.decode(result.charset)
