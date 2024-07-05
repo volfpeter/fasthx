@@ -32,7 +32,9 @@ $ pip install fasthx
 
 ## Examples
 
-For complete examples, please see the [examples](https://github.com/volfpeter/fasthx/tree/main/examples) folder.
+For complete, but simple examples that showcase the basic use of `FastHX`, please see the [examples](https://github.com/volfpeter/fasthx/tree/main/examples) folder.
+
+If you're looking for a more complex (`Jinja2`) example with features like active search, lazy-loading, server-sent events, custom server-side HTMX triggers, dialogs, and TailwindCSS and DaisyUI integration, check out this [FastAPI-HTMX-Tailwind example](https://github.com/volfpeter/fastapi-htmx-tailwind-example).
 
 ### Jinja2 templating
 

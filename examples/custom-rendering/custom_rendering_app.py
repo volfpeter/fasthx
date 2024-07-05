@@ -16,7 +16,7 @@ def get_random_number() -> int:
 DependsRandomNumber = Annotated[int, Depends(get_random_number)]
 
 
-def render_index(*args: Any, **kwargs: Any) -> str:
+def render_index(result: Any, *, context: dict[str, Any], request: Request) -> str:
     return "<h1>Hello FastHX</h1>"
 
 
@@ -31,20 +31,25 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
     return f"{lucky_number}\n{users}"
 
 
-@app.get("/")
+# Note on the type ignore: it seems mypy generic resolution fails at
+# fastapi==0.111.0, at least on the first mypy run when there's no cache.
+@app.get("/", response_model=None, include_in_schema=False)  # type: ignore[arg-type,unused-ignore]
 @page(render_index)
-def index() -> None:
-    ...
+def index() -> None: ...
 
 
-@app.get("/htmx-or-data")
+# Note on the type ignore: it seems mypy generic resolution fails at
+# fastapi==0.111.0, at least on the first mypy run when there's no cache.
+@app.get("/htmx-or-data")  # type: ignore[arg-type,unused-ignore]
 @hx(render_user_list)
 def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[dict[str, str]]:
     response.headers["my-response-header"] = "works"
     return [{"name": "Joe"}]
 
 
-@app.get("/htmx-only")
+# Note on the type ignore: it seems mypy generic resolution fails at
+# fastapi==0.111.0, at least on the first mypy run when there's no cache.
+@app.get("/htmx-only", include_in_schema=False)  # type: ignore[arg-type,unused-ignore]
 @hx(render_user_list, no_data=True)
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
