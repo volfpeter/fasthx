@@ -1,11 +1,9 @@
-import warnings
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass
 from typing import Any, Coroutine
 
 from fastapi import Request, Response
 from fastapi.templating import Jinja2Templates
-from typing_extensions import deprecated
 
 from .core_decorators import hx, page
 from .typing import JinjaContextFactory, MaybeAsyncFunc, P
@@ -105,29 +103,6 @@ class Jinja:
     a Jinja rendering context. The default value is `JinjaContext.unpack_result`.
     """
 
-    @deprecated("Deprecated and will be removed in the future. Please use `hx()` instead.")
-    def __call__(
-        self,
-        template_name: str,
-        *,
-        no_data: bool = False,
-        make_context: JinjaContextFactory | None = None,
-    ) -> Callable[[MaybeAsyncFunc[P, Any]], Callable[P, Coroutine[None, None, Any | Response]]]:
-        """
-        Deprecated and will be removed in the future. Please use `hx()` instead.
-
-        Alias for `hx()`.
-        """
-        warnings.warn(
-            (
-                "Jinja.__call__() is deprecated and will be removed in the future. "
-                "Please use hx() instead."
-            ),
-            DeprecationWarning,
-            stacklevel=1,
-        )
-        return self.hx(template_name, no_data=no_data, make_context=make_context)
-
     def hx(
         self,
         template_name: str,
@@ -184,29 +159,6 @@ class Jinja:
             )
 
         return page(render)
-
-    @deprecated("Deprecated and will be removed in the future. Please use `hx()` instead.")
-    def template(
-        self,
-        template_name: str,
-        *,
-        no_data: bool = False,
-        make_context: JinjaContextFactory | None = None,
-    ) -> Callable[[MaybeAsyncFunc[P, Any]], Callable[P, Coroutine[None, None, Any | Response]]]:
-        """
-        Deprecated and will be removed in the future. Please use `hx()` instead.
-
-        Alias for `hx()`.
-        """
-        warnings.warn(
-            (
-                "Jinja.template() is deprecated and will be removed in the future. "
-                "Please use hx() instead."
-            ),
-            DeprecationWarning,
-            stacklevel=1,
-        )
-        return self.hx(template_name, no_data=no_data, make_context=make_context)
 
     def _make_response(
         self,
