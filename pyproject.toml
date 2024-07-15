@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "0.2407.0"
+version = "1.0.0"
 description = "FastAPI data APIs with HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
