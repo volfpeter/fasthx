@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "0.2407.0"
+version = "1.0.0"
 description = "FastAPI data APIs with HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
@@ -14,8 +14,8 @@ typing-extensions = ">=4.5.0"
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.26.0"
 jinja2 = "^3.1.3"
-mkdocs-material = "^9.5.9"
-mkdocstrings = {extras = ["python"], version = "^0.24.0"}
+mkdocs-material = "^9.5.29"
+mkdocstrings = {extras = ["python"], version = "^0.25.1"}
 mypy = "^1.10.0"
 poethepoet = "^0.27.0"
 pytest = "^8.0.1"

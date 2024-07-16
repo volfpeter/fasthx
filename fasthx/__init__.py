@@ -4,5 +4,6 @@ from .dependencies import DependsHXRequest as DependsHXRequest
 from .dependencies import get_hx_request as get_hx_request
 from .jinja import Jinja as Jinja
 from .jinja import JinjaContext as JinjaContext
+from .jinja import TemplateHeader as TemplateHeader
 from .typing import HTMLRenderer as HTMLRenderer
 from .typing import JinjaContextFactory as JinjaContextFactory

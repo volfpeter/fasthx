@@ -18,6 +18,7 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    - navigation.indexes
     - navigation.instant
     - navigation.tracking
     - search.suggest
@@ -42,9 +43,12 @@ markdown_extensions:
 
 nav:
   - index.md
+  - Examples:
+      - Examples: examples/index.md
+      - examples/custom-templating.md
+      - examples/jinja-templating.md
   - API Reference:
-      - hx(): api-hx.md
-      - page(): api-page.md
-      - Jinja: api-jinja.md
-      - HTMLRenderer: api-HTMLRenderer.md
-      - Dependencies: api-dependencies.md
+      - api/core-decorators.md
+      - api/jinja.md
+      - api/dependencies.md
+      - api/typing.md
