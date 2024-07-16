@@ -15,3 +15,11 @@
         - __call__
     options:
         show_root_heading: true
+
+## ::: fasthx.typing.RequestComponentSelector
+    options:
+        show_root_heading: true
+
+## ::: fasthx.typing.ComponentSelector
+    options:
+        show_root_heading: true

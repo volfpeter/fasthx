@@ -1,12 +1,12 @@
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Coroutine, TypeAlias
+from typing import Any, Coroutine
 
 from fastapi import Request, Response
 from fastapi.templating import Jinja2Templates
 
 from .core_decorators import hx, page
-from .typing import JinjaContextFactory, MaybeAsyncFunc, P
+from .typing import ComponentSelector, JinjaContextFactory, MaybeAsyncFunc, P, RequestComponentSelector
 
 
 class JinjaContext:
@@ -95,13 +95,16 @@ class TemplateHeader:
     """
     Template selector that takes the Jinja template name from a request header.
 
-    This class makes it possible for the client to submit the *key* of the required template
+    This class makes it possible for the client to submit the *key/ID* of the required template
     to the server in a header. The Jinja decorators will then look up and render the requested
     template if it exists. If the client doesn't request a specific template, then `default`
     will be used if it was set, otherwise an exception will be raised.
 
-    By default this class treats template keys as key-insensitive. If you'd like to disable
+    By default this class treats template keys as case-insensitive. If you'd like to disable
     this behavior, set `case_sensitive` to `True`.
+
+    Implements:
+        - `RequestComponentSelector`.
     """
 
     header: str
@@ -114,7 +117,7 @@ class TemplateHeader:
     """The template to use when the client didn't request a specific one."""
 
     case_sensitive: bool = field(default=False, kw_only=True)
-    """Whether the keys of `templates` are case sensitive or not (default is case insensitive)."""
+    """Whether the keys of `templates` are case-sensitive or not (default is `False`)."""
 
     def __post_init__(self) -> None:
         if not self.case_sensitive:
@@ -124,7 +127,7 @@ class TemplateHeader:
                 {k.lower(): v for k, v in self.templates.items()},
             )
 
-    def get_template_name(self, request: Request) -> str:
+    def get_component_id(self, request: Request) -> str:
         """
         Returns the name of the template that was requested by the client.
 
@@ -146,10 +149,6 @@ class TemplateHeader:
             return self.default
 
 
-TemplateSelector: TypeAlias = TemplateHeader | str
-"""Type alias for known template selectors."""
-
-
 @dataclass(frozen=True, slots=True)
 class Jinja:
     """Jinja2 (renderer) decorator factory."""
@@ -165,7 +164,7 @@ class Jinja:
 
     def hx(
         self,
-        template: TemplateSelector,
+        template: ComponentSelector,
         *,
         no_data: bool = False,
         make_context: JinjaContextFactory | None = None,
@@ -200,7 +199,7 @@ class Jinja:
 
     def page(
         self,
-        template: TemplateSelector,
+        template: ComponentSelector,
         *,
         make_context: JinjaContextFactory | None = None,
         prefix: str | None = None,
@@ -231,7 +230,7 @@ class Jinja:
 
     def _make_response(
         self,
-        template: TemplateSelector,
+        template: ComponentSelector,
         *,
         jinja_context: dict[str, Any],
         prefix: str | None = None,
@@ -263,7 +262,7 @@ class Jinja:
 
     def _resolve_template_name(
         self,
-        template: TemplateSelector,
+        template: ComponentSelector,
         *,
         prefix: str | None,
         request: Request,
@@ -282,9 +281,9 @@ class Jinja:
         Raises:
             ValueError: If template resolution failed.
         """
-        if isinstance(template, TemplateHeader):
+        if isinstance(template, RequestComponentSelector):
             try:
-                result = template.get_template_name(request)
+                result = template.get_component_id(request)
             except KeyError as e:
                 raise ValueError("Failed to resolve template name from request.") from e
         elif isinstance(template, str):

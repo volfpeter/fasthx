@@ -1,5 +1,5 @@
 from collections.abc import Callable, Coroutine
-from typing import Any, ParamSpec, Protocol, TypeVar
+from typing import Any, ParamSpec, Protocol, TypeAlias, TypeVar, runtime_checkable
 
 from fastapi import Request, Response
 
@@ -67,3 +67,25 @@ class JinjaContextFactory(Protocol):
             ValueError: If converting the arguments to a Jinja context fails.
         """
         ...
+
+
+@runtime_checkable
+class RequestComponentSelector(Protocol):
+    """
+    Component selector protocol that loads the required component's ID from the request.
+
+    The protocol is runtime-checkable, so it can be used in `isinstance()`, `issubclass()` calls.
+    """
+
+    def get_component_id(self, request: Request) -> str:
+        """
+        Returns the identifier of the component that was requested by the client.
+
+        Raises:
+            KeyError: If the component couldn't be identified.
+        """
+        ...
+
+
+ComponentSelector: TypeAlias = str | RequestComponentSelector
+"""Type alias for known component selectors."""
