@@ -45,7 +45,7 @@ def htmx_only() -> list[User]:
 
 ## Using `TemplateHeader`
 
-In the basic example, routes always rendered a fixed HTML template. `TemplateHeader` lifts this restriction by letting the client submit the key of the required template,
+In the basic example, routes always rendered a fixed HTML template. `TemplateHeader` lifts this restriction by letting the client submit the _key_ of the required template,
 automatically looking up the corresponding template, and of course rendering it.
 
 This can be particularly helpful when multiple templates/UI components require the same data and business logic.
