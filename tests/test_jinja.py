@@ -188,6 +188,30 @@ class TestJinjaContext:
         )
         assert result == {**route_context, **route_converted}
 
+    def test_unpack_result_with_route_context_conflict(self) -> None:
+        with pytest.raises(ValueError):
+            JinjaContext.unpack_result_with_route_context(
+                route_result=billy, route_context={"name": "Not Billy"}
+            )
+
+    def test_use_converters(self) -> None:
+        context_factory = JinjaContext.use_converters(
+            lambda _: {"route_result": 1},
+            lambda _: {"route_context": 2},
+        )
+        assert context_factory(route_result=None, route_context={}) == {
+            "route_result": 1,
+            "route_context": 2,
+        }
+
+    def test_use_converters_name_conflict(self) -> None:
+        context_factory = JinjaContext.use_converters(
+            lambda _: {"x": 1},
+            lambda _: {"x": 2},
+        )
+        with pytest.raises(ValueError):
+            context_factory(route_result=None, route_context={})
+
     def test_wrap_as(self) -> None:
         result_only = JinjaContext.wrap_as("item")
         assert result_only is JinjaContext.wrap_as("item")
@@ -203,9 +227,3 @@ class TestJinjaContext:
     def test_wrap_as_name_conflict(self) -> None:
         with pytest.raises(ValueError):
             JinjaContext.wrap_as("foo", "foo")
-
-    def test_unpack_result_with_route_context_conflict(self) -> None:
-        with pytest.raises(ValueError):
-            JinjaContext.unpack_result_with_route_context(
-                route_result=billy, route_context={"name": "Not Billy"}
-            )
