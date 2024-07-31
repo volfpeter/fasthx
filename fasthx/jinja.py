@@ -16,10 +16,9 @@ class JinjaContext:
     """
 
     @classmethod
-    def unpack_result(cls, *, route_result: Any, route_context: dict[str, Any]) -> dict[str, Any]:
+    def unpack_object(cls, obj: Any) -> dict[str, Any]:
         """
-        Jinja context factory that tries to reasonably convert non-`dict` route results
-        to valid Jinja contexts (the `route_context` argument is ignored).
+        Utility function that unpacks an object into a `dict`.
 
         Supports `dict` and `Collection` instances, plus anything with `__dict__` or `__slots__`
         attributes, for example Pydantic models, dataclasses, or "standard" class instances.
@@ -34,33 +33,47 @@ class JinjaContext:
         - `None` is converted into an empty context.
 
         Raises:
-            ValueError: If `route_result` can not be handled by any of the conversion rules.
+            ValueError: If the given object can not be handled by any of the conversion rules.
         """
-        if isinstance(route_result, dict):
-            return route_result
+        if isinstance(obj, dict):
+            return obj
 
         # Covers lists, tuples, sets, etc..
-        if isinstance(route_result, Collection):
-            return {"items": route_result}
+        if isinstance(obj, Collection):
+            return {"items": obj}
 
         object_keys: Iterable[str] | None = None
 
         # __dict__ should take priority if an object has both this and __slots__.
-        if hasattr(route_result, "__dict__"):
+        if hasattr(obj, "__dict__"):
             # Covers Pydantic models and standard classes.
-            object_keys = route_result.__dict__.keys()
-        elif hasattr(route_result, "__slots__"):
+            object_keys = obj.__dict__.keys()
+        elif hasattr(obj, "__slots__"):
             # Covers classes with with __slots__.
-            object_keys = route_result.__slots__
+            object_keys = obj.__slots__
 
         if object_keys is not None:
-            return {key: getattr(route_result, key) for key in object_keys if not key.startswith("_")}
+            return {key: getattr(obj, key) for key in object_keys if not key.startswith("_")}
 
-        if route_result is None:
+        if obj is None:
             # Convert no response to empty context.
             return {}
 
         raise ValueError("Result conversion failed, unknown result type.")
+
+    @classmethod
+    def unpack_result(cls, *, route_result: Any, route_context: dict[str, Any]) -> dict[str, Any]:
+        """
+        Jinja context factory that tries to reasonably convert non-`dict` route results
+        to valid Jinja contexts (the `route_context` argument is ignored).
+
+        Supports everything that `JinjaContext.unpack_object()` does and follows the same
+        conversion rules.
+
+        Raises:
+            ValueError: If `route_result` can not be handled by any of the conversion rules.
+        """
+        return cls.unpack_object(route_result)
 
     @classmethod
     def unpack_result_with_route_context(
@@ -73,7 +86,7 @@ class JinjaContext:
         Jinja context factory that tries to reasonably convert non-`dict` route results
         to valid Jinja contexts, also including every key-value pair from `route_context`.
 
-        Supports everything that `JinjaContext.unpack_result()` does and follows the same
+        Supports everything that `JinjaContext.unpack_object()` does and follows the same
         conversion rules.
 
         Raises:
@@ -89,6 +102,39 @@ class JinjaContext:
         # was returned by the route and someone may have a reference to it.
         route_context.update(result)
         return route_context
+
+    @classmethod
+    def use_converters(
+        cls,
+        convert_route_result: Callable[[Any], dict[str, Any]] | None,
+        convert_route_context: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    ) -> JinjaContextFactory:
+        """
+        Creates a `JinjaContextFactory` that uses the provided functions to convert
+        `route_result` and `route_context` to a Jinja context.
+
+        The returned `JinjaContextFactory` raises a `ValueError` if the overlapping keys are found.
+
+        Arguments:
+            convert_route_result: Function that takes `route_result` and converts it into a `dict`.
+                See `JinjaContextFactory` for `route_result` details.
+            convert_route_context: Function that takes `route_context` and converts it into a `dict`.
+                See `JinjaContextFactory` for `route_context` details.
+
+        Returns:
+            The created `JinjaContextFactory`.
+        """
+
+        def make_jinja_context(*, route_result: Any, route_context: dict[str, Any]) -> dict[str, Any]:
+            rr = {} if convert_route_result is None else convert_route_result(route_result)
+            rc = {} if convert_route_context is None else convert_route_context(route_context)
+            if len(set(rr.keys()) & set(rc.keys())) > 0:
+                raise ValueError("Overlapping keys in route result and route context.")
+
+            rr.update(rc)
+            return rr
+
+        return make_jinja_context
 
     @classmethod
     @lru_cache
