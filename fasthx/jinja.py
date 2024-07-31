@@ -1,5 +1,6 @@
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Any, Coroutine
 
 from fastapi import Request, Response
@@ -88,6 +89,41 @@ class JinjaContext:
         # was returned by the route and someone may have a reference to it.
         route_context.update(result)
         return route_context
+
+    @classmethod
+    @lru_cache
+    def wrap_as(cls, result_key: str, context_key: str | None = None) -> JinjaContextFactory:
+        """
+        Creates a `JinjaContextFactory` that wraps the route's result and optionally the route
+        context under user-specified keys.
+
+        `result_key` and `context_key` must be different.
+
+        Arguments:
+            result_key: The key by which the `route_result` should be accessible in templates.
+                See `JinjaContextFactory` for `route_result` details.
+            context_key: The key by whih the `route_context` should be accessible in templates.
+                If `None` (the default), then the `route_context` will not be accessible.
+                See `JinjaContextFactory` for `route_context` details.
+
+        Returns:
+            The created `JinjaContextFactory`.
+
+        Raises:
+            ValueError: If `result_key` and `context_key` are equal.
+        """
+
+        if result_key == context_key:
+            raise ValueError("The two keys must be different, merging is not supported.")
+
+        def wrap(*, route_result: Any, route_context: dict[str, Any]) -> dict[str, Any]:
+            result = {result_key: route_result}
+            if context_key is not None:
+                result[context_key] = route_context
+
+            return result
+
+        return wrap
 
 
 @dataclass(frozen=True, slots=True)
