@@ -188,6 +188,22 @@ class TestJinjaContext:
         )
         assert result == {**route_context, **route_converted}
 
+    def test_wrap_as(self) -> None:
+        result_only = JinjaContext.wrap_as("item")
+        assert result_only is JinjaContext.wrap_as("item")
+
+        result_and_context = JinjaContext.wrap_as("item", "route")
+        route_result, route_context = 22, {"4": 4}
+
+        assert {"item": route_result} == result_only(route_result=route_result, route_context=route_context)
+        assert {"item": route_result, "route": route_context} == result_and_context(
+            route_result=route_result, route_context=route_context
+        )
+
+    def test_wrap_as_name_conflict(self) -> None:
+        with pytest.raises(ValueError):
+            JinjaContext.wrap_as("foo", "foo")
+
     def test_unpack_result_with_route_context_conflict(self) -> None:
         with pytest.raises(ValueError):
             JinjaContext.unpack_result_with_route_context(
