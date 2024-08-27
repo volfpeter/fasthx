@@ -77,7 +77,7 @@ class RequestComponentSelector(Protocol):
     The protocol is runtime-checkable, so it can be used in `isinstance()`, `issubclass()` calls.
     """
 
-    def get_component_id(self, request: Request, error: Exception | None = None) -> str:
+    def get_component_id(self, request: Request, error: Exception | None) -> str:
         """
         Returns the identifier of the component that was requested by the client.
 
@@ -89,7 +89,7 @@ class RequestComponentSelector(Protocol):
 
         ```python
         class MyComponentSelector:
-            def get_component_id(self, request: Request, error: Exception | None = None) -> str:
+            def get_component_id(self, request: Request, error: Exception | None) -> str:
                 if error is not None:
                     raise error
 

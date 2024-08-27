@@ -235,7 +235,7 @@ class TemplateHeader:
                 {k.lower(): v for k, v in self.templates.items()},
             )
 
-    def get_component_id(self, request: Request, error: Exception | None = None) -> str:
+    def get_component_id(self, request: Request, error: Exception | None) -> str:
         """
         Returns the name of the template that was requested by the client.
 
