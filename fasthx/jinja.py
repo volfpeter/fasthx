@@ -390,7 +390,7 @@ class Jinja:
             context=jinja_context,
             request=request,
         )
-        return result.body.decode(result.charset)
+        return bytes(result.body).decode(result.charset)
 
     def _resolve_template_name(
         self,
