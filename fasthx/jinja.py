@@ -7,7 +7,28 @@ from fastapi import Request, Response
 from fastapi.templating import Jinja2Templates
 
 from .core_decorators import hx, page
-from .typing import ComponentSelector, JinjaContextFactory, MaybeAsyncFunc, P, RequestComponentSelector
+from .typing import (
+    ComponentSelector,
+    HTMLRenderer,
+    JinjaContextFactory,
+    MaybeAsyncFunc,
+    P,
+    RequestComponentSelector,
+)
+
+
+class JinjaPath(str):
+    """
+    String subclass that can be used to mark a template path as "absolute".
+
+    In this context "absolute" means the template path should be exempt from any prefixing behavior
+    during template name resolution.
+
+    Note: calling any of the "mutation" methods (e.g. `.lower()`) of an instance will
+    result in a plain `str` object.
+    """
+
+    ...
 
 
 class JinjaContext:
@@ -185,6 +206,8 @@ class TemplateHeader:
     By default this class treats template keys as case-insensitive. If you'd like to disable
     this behavior, set `case_sensitive` to `True`.
 
+    This class can also handle route errors if the `error` property is set.
+
     Implements:
         - `RequestComponentSelector`.
     """
@@ -194,6 +217,9 @@ class TemplateHeader:
 
     templates: dict[str, str]
     """Dictionary that maps template keys to template (file) names."""
+
+    error: type[Exception] | tuple[type[Exception], ...] | None = field(default=None, kw_only=True)
+    """The accepted error or errors."""
 
     default: str | None = field(default=None, kw_only=True)
     """The template to use when the client didn't request a specific one."""
@@ -209,7 +235,7 @@ class TemplateHeader:
                 {k.lower(): v for k, v in self.templates.items()},
             )
 
-    def get_component_id(self, request: Request) -> str:
+    def get_component_id(self, request: Request, error: Exception | None = None) -> str:
         """
         Returns the name of the template that was requested by the client.
 
@@ -220,6 +246,9 @@ class TemplateHeader:
             KeyError: If the client requested a specific template but it's unknown, or
                 if no template was requested and there's no default either.
         """
+        if error is not None and (self.error is None or not isinstance(error, self.error)):
+            raise error
+
         if (key := request.headers.get(self.header, None)) is not None:
             if not self.case_sensitive:
                 key = key.lower()
@@ -248,6 +277,7 @@ class Jinja:
         self,
         template: ComponentSelector,
         *,
+        error_template: ComponentSelector | None = None,
         no_data: bool = False,
         make_context: JinjaContextFactory | None = None,
         prefix: str | None = None,
@@ -269,20 +299,19 @@ class Jinja:
             # No route-specific override.
             make_context = self.make_context
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
-            return self._make_response(
-                template,
-                jinja_context=make_context(route_result=result, route_context=context),
-                prefix=prefix,
-                request=request,
-            )
-
-        return hx(render, no_data=no_data)
+        return hx(
+            self._make_render_function(template, make_context=make_context, prefix=prefix),
+            render_error=None
+            if error_template is None
+            else self._make_render_function(error_template, make_context=make_context, prefix=prefix),
+            no_data=no_data,
+        )
 
     def page(
         self,
         template: ComponentSelector,
         *,
+        error_template: ComponentSelector | None = None,
         make_context: JinjaContextFactory | None = None,
         prefix: str | None = None,
     ) -> Callable[[MaybeAsyncFunc[P, Any]], Callable[P, Coroutine[None, None, Any | Response]]]:
@@ -300,22 +329,44 @@ class Jinja:
             # No route-specific override.
             make_context = self.make_context
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
-            return self._make_response(
-                template,
-                jinja_context=make_context(route_result=result, route_context=context),
-                prefix=prefix,
-                request=request,
-            )
+        return page(
+            self._make_render_function(template, make_context=make_context, prefix=prefix),
+            render_error=None
+            if error_template is None
+            else self._make_render_function(error_template, make_context=make_context, prefix=prefix),
+        )
 
-        return page(render)
-
-    def _make_response(
+    def _make_render_function(
         self,
         template: ComponentSelector,
         *,
+        make_context: JinjaContextFactory,
+        prefix: str | None,
+    ) -> HTMLRenderer[Any]:
+        """
+        Creates an `HTMLRenderer` with the given configuration.
+
+        Arguments:
+            template: The template the renderer function should use.
+            make_context: The Jinja rendering context factory to use.
+            prefix: Optional template name prefix.
+        """
+
+        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
+            template_name = self._resolve_template_name(template, prefix=prefix, request=request)
+            return self._make_response(
+                template_name,
+                jinja_context=make_context(route_result=result, route_context=context),
+                request=request,
+            )
+
+        return render
+
+    def _make_response(
+        self,
+        template: str,
+        *,
         jinja_context: dict[str, Any],
-        prefix: str | None = None,
         request: Request,
     ) -> str | Response:
         """
@@ -327,7 +378,6 @@ class Jinja:
             prefix: Optional template name prefix.
             request: The current request.
         """
-        template_name = self._resolve_template_name(template, prefix=prefix, request=request)
         # The reason for returning string from this method is to let `hx()` or `page()` create
         # the HTML response - that way they can copy response headers and do other convenience
         # conversions.
@@ -336,7 +386,7 @@ class Jinja:
         # dependencies in the Jinja context. Then this method can be overridden to take the Response
         # object from the context and copy the header from it into TemplateResponse.
         result = self.templates.TemplateResponse(
-            name=template_name,
+            name=template,
             context=jinja_context,
             request=request,
         )
@@ -346,6 +396,7 @@ class Jinja:
         self,
         template: ComponentSelector,
         *,
+        error: Exception | None = None,
         prefix: str | None,
         request: Request,
     ) -> str:
@@ -365,7 +416,7 @@ class Jinja:
         """
         if isinstance(template, RequestComponentSelector):
             try:
-                result = template.get_component_id(request)
+                result = template.get_component_id(request, error)
             except KeyError as e:
                 raise ValueError("Failed to resolve template name from request.") from e
         elif isinstance(template, str):
@@ -373,5 +424,6 @@ class Jinja:
         else:
             raise ValueError("Unknown template selector.")
 
+        prefix = None if isinstance(result, JinjaPath) else prefix
         result = result.lstrip("/")
         return f"{prefix}/{result}" if prefix else result
