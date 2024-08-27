@@ -107,7 +107,7 @@ def jinja_app() -> FastAPI:
             "X-Error-Component",
             {},
             default="hello-world.jinja",
-            error=RenderedError,
+            error=(RenderedError, TypeError, ValueError),  # Test error tuple
         ),
     )
     def error_page(response: Response) -> None:
