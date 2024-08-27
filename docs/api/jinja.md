@@ -12,6 +12,10 @@
     options:
         show_root_heading: true
 
+## ::: fasthx.JinjaPath
+    options:
+        show_root_heading: true
+
 ## ::: fasthx.JinjaContextFactory
     members:
         - __call__
