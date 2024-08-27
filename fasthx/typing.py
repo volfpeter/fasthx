@@ -77,12 +77,29 @@ class RequestComponentSelector(Protocol):
     The protocol is runtime-checkable, so it can be used in `isinstance()`, `issubclass()` calls.
     """
 
-    def get_component_id(self, request: Request) -> str:
+    def get_component_id(self, request: Request, error: Exception | None) -> str:
         """
         Returns the identifier of the component that was requested by the client.
 
+        The caller should ensure that `error` will be the exception that was raised by the
+        route or `None` if the route returned normally.
+
+        If an implementation can not or does not want to handle route errors, then the method
+        should re-raise the received exception. Example:
+
+        ```python
+        class MyComponentSelector:
+            def get_component_id(self, request: Request, error: Exception | None) -> str:
+                if error is not None:
+                    raise error
+
+                ...
+        ```
+
         Raises:
             KeyError: If the component couldn't be identified.
+            Exception: The received `error` argument if it was not `None` and the implementation
+                can not handle route errors.
         """
         ...
 

@@ -5,7 +5,7 @@ from fastapi import FastAPI, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.testclient import TestClient
 
-from fasthx import Jinja, JinjaContext, TemplateHeader
+from fasthx import Jinja, JinjaContext, JinjaPath, TemplateHeader
 
 from .data import (
     DependsRandomNumber,
@@ -20,6 +20,18 @@ from .data import (
     user_list_json,
     users,
 )
+
+
+class RenderedError(Exception):
+    def __init__(self, data: dict[str, Any], *, response: Response) -> None:
+        super().__init__("Data validation failed.")
+
+        # Pattern for setting the response status code for error rendering responses.
+        response.status_code = 456
+
+        # Pattern to make the data available in Jinja rendering contexts. Not used in tests.
+        for key, value in data.items():
+            setattr(self, key, value)
 
 
 @pytest.fixture
@@ -51,6 +63,7 @@ def jinja_app() -> FastAPI:
             {
                 "header": "h1.jinja",
                 "paragraph": "p.jinja",
+                "hello-world": JinjaPath("hello-world.jinja"),
             },
             default="span.jinja",
         ),
@@ -72,6 +85,33 @@ def jinja_app() -> FastAPI:
     )
     def header_with_no_default() -> User:
         return billy
+
+    @app.get("/error")
+    @jinja.hx(
+        TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
+        error_template=TemplateHeader(
+            "X-Error-Component",
+            {},
+            default="hello-world.jinja",
+            error=RenderedError,
+        ),
+        no_data=True,
+    )
+    def error(response: Response) -> None:
+        raise RenderedError({"a": 1, "b": 2}, response=response)
+
+    @app.get("/error-page")
+    @jinja.page(
+        TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
+        error_template=TemplateHeader(
+            "X-Error-Component",
+            {},
+            default="hello-world.jinja",
+            error=(RenderedError, TypeError, ValueError),  # Test error tuple
+        ),
+    )
+    def error_page(response: Response) -> None:
+        raise RenderedError({"a": 1, "b": 2}, response=response)
 
     return app
 
@@ -103,6 +143,8 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
         ("/htmx-or-data/1", None, 200, billy_json, {}),
         ("/htmx-or-data/2", {"HX-Request": "true"}, 200, billy_html_span, {}),
         ("/htmx-or-data/3", {"HX-Request": "true", "X-Component": "header"}, 200, billy_html_header, {}),
+        # JinjaPath test (decorator prefix not used).
+        ("/htmx-or-data/3", {"HX-Request": "true", "X-Component": "hello-world"}, 200, "Hello World!", {}),
         (
             "/htmx-or-data/3",
             {"HX-Request": "true", "X-Component": "HeAdEr"},  # Test case-sensitivity.
@@ -144,6 +186,10 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
         ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html, {}),
         ("/htmx-only", None, 400, "", {}),
         ("/htmx-only", {"HX-Request": "false"}, 400, "", {}),
+        # hx error rendering
+        ("/error", {"HX-Request": "true"}, 456, "Hello World!", {}),
+        # page error rendering
+        ("/error-page", None, 456, "Hello World!", {}),
     ),
 )
 def test_jinja(
