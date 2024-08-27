@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "1.1.1"
+version = "2.0.0-rc1"
 description = "FastAPI data APIs with HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
@@ -13,15 +13,15 @@ typing-extensions = ">=4.5.0"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.26.0"
-jinja2 = "^3.1.3"
-mkdocs-material = "^9.5.29"
-mkdocstrings = {extras = ["python"], version = "^0.25.1"}
-mypy = "^1.10.0"
+jinja2 = "^3.1.4"
+mkdocs-material = "^9.5.32"
+mkdocstrings = {extras = ["python"], version = "^0.25.2"}
+mypy = "^1.11.1"
 poethepoet = "^0.27.0"
-pytest = "^8.0.1"
+pytest = "^8.3.2"
 pytest-random-order = "^1.1.1"
-ruff = "^0.5.0"
-uvicorn = "^0.27.1"
+ruff = "^0.6.2"
+uvicorn = "^0.30.6"
 
 [build-system]
 requires = ["poetry-core"]
