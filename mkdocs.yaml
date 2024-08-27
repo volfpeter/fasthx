@@ -52,3 +52,5 @@ nav:
       - api/jinja.md
       - api/dependencies.md
       - api/typing.md
+  - Migrations:
+      - migrations/1-to-2.md
