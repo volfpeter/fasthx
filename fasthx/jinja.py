@@ -209,7 +209,7 @@ class TemplateHeader:
     This class can also handle route errors if the `error` property is set.
 
     Implements:
-        - `RequestComponentSelector`.
+        - `RequestComponentSelector[str]`.
     """
 
     header: str
@@ -235,7 +235,7 @@ class TemplateHeader:
                 {k.lower(): v for k, v in self.templates.items()},
             )
 
-    def get_component_id(self, request: Request, error: Exception | None) -> str:
+    def get_component(self, request: Request, error: Exception | None) -> str:
         """
         Returns the name of the template that was requested by the client.
 
@@ -275,9 +275,9 @@ class Jinja:
 
     def hx(
         self,
-        template: ComponentSelector,
+        template: ComponentSelector[str],
         *,
-        error_template: ComponentSelector | None = None,
+        error_template: ComponentSelector[str] | None = None,
         no_data: bool = False,
         make_context: JinjaContextFactory | None = None,
         prefix: str | None = None,
@@ -309,9 +309,9 @@ class Jinja:
 
     def page(
         self,
-        template: ComponentSelector,
+        template: ComponentSelector[str],
         *,
-        error_template: ComponentSelector | None = None,
+        error_template: ComponentSelector[str] | None = None,
         make_context: JinjaContextFactory | None = None,
         prefix: str | None = None,
     ) -> Callable[[MaybeAsyncFunc[P, Any]], Callable[P, Coroutine[None, None, Any | Response]]]:
@@ -338,7 +338,7 @@ class Jinja:
 
     def _make_render_function(
         self,
-        template: ComponentSelector,
+        template: ComponentSelector[str],
         *,
         make_context: JinjaContextFactory,
         prefix: str | None,
@@ -394,7 +394,7 @@ class Jinja:
 
     def _resolve_template_name(
         self,
-        template: ComponentSelector,
+        template: ComponentSelector[str],
         *,
         error: Exception | None = None,
         prefix: str | None,
@@ -416,7 +416,7 @@ class Jinja:
         """
         if isinstance(template, RequestComponentSelector):
             try:
-                result = template.get_component_id(request, error)
+                result = template.get_component(request, error)
             except KeyError as e:
                 raise ValueError("Failed to resolve template name from request.") from e
         elif isinstance(template, str):
