@@ -5,6 +5,7 @@ from fastapi import Request, Response
 
 P = ParamSpec("P")
 T = TypeVar("T")
+Tco = TypeVar("Tco", covariant=True)
 Tcontra = TypeVar("Tcontra", contravariant=True)
 
 MaybeAsyncFunc = Callable[P, T] | Callable[P, Coroutine[Any, Any, T]]
@@ -70,16 +71,16 @@ class JinjaContextFactory(Protocol):
 
 
 @runtime_checkable
-class RequestComponentSelector(Protocol):
+class RequestComponentSelector(Protocol[Tco]):
     """
-    Component selector protocol that loads the required component's ID from the request.
+    Component selector protocol that uses the request to select the component that will be rendered.
 
     The protocol is runtime-checkable, so it can be used in `isinstance()`, `issubclass()` calls.
     """
 
-    def get_component_id(self, request: Request, error: Exception | None) -> str:
+    def get_component(self, request: Request, error: Exception | None) -> Tco:
         """
-        Returns the identifier of the component that was requested by the client.
+        Returns the component that was requested by the client.
 
         The caller should ensure that `error` will be the exception that was raised by the
         route or `None` if the route returned normally.
@@ -89,7 +90,7 @@ class RequestComponentSelector(Protocol):
 
         ```python
         class MyComponentSelector:
-            def get_component_id(self, request: Request, error: Exception | None) -> str:
+            def get_component(self, request: Request, error: Exception | None) -> str:
                 if error is not None:
                     raise error
 
@@ -104,5 +105,5 @@ class RequestComponentSelector(Protocol):
         ...
 
 
-ComponentSelector: TypeAlias = str | RequestComponentSelector
+ComponentSelector: TypeAlias = str | RequestComponentSelector[T]
 """Type alias for known component selectors."""
