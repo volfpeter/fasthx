@@ -39,6 +39,7 @@ def jinja_app() -> FastAPI:
     app = FastAPI()
 
     jinja = Jinja(Jinja2Templates("tests/templates"))
+    no_data_jinja = Jinja(Jinja2Templates("tests/templates"), no_data=True)
 
     @app.get("/")
     @jinja.page("user-list.jinja")
@@ -113,6 +114,11 @@ def jinja_app() -> FastAPI:
     def error_page(response: Response) -> None:
         raise RenderedError({"a": 1, "b": 2}, response=response)
 
+    @app.get("/global-no-data")
+    @no_data_jinja.hx("user-list.jinja", no_data=False)
+    def global_no_data() -> list[User]:
+        return []
+
     return app
 
 
@@ -186,10 +192,12 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
         ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html, {}),
         ("/htmx-only", None, 400, "", {}),
         ("/htmx-only", {"HX-Request": "false"}, 400, "", {}),
-        # hx error rendering
+        # hx() error rendering
         ("/error", {"HX-Request": "true"}, 456, "Hello World!", {}),
-        # page error rendering
+        # page() error rendering
         ("/error-page", None, 456, "Hello World!", {}),
+        # Globally disabled data responses
+        ("/global-no-data", None, 400, "", {}),
     ),
 )
 def test_jinja(

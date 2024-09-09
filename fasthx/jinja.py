@@ -273,6 +273,14 @@ class Jinja:
     a Jinja rendering context. The default value is `JinjaContext.unpack_result`.
     """
 
+    no_data: bool = field(default=False, kw_only=True)
+    """
+    If set, `hx()` routes will only accept HTMX requests.
+
+    Note that if this property is `True`, then the `hx()` decorator's `no_data` argument
+    will have no effect.
+    """
+
     def hx(
         self,
         template: ComponentSelector[str],
@@ -304,7 +312,7 @@ class Jinja:
             render_error=None
             if error_template is None
             else self._make_render_function(error_template, make_context=make_context, prefix=prefix),
-            no_data=no_data,
+            no_data=self.no_data or no_data,
         )
 
     def page(
