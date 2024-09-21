@@ -149,3 +149,11 @@ All contributions are welcome.
 ## License - MIT
 
 The package is open-sourced under the conditions of the [MIT license](https://choosealicense.com/licenses/mit/).
+
+## Thank you
+
+Thank you to [Smart-Now](https://www.smart-now.com/) for supporting the project.
+
+<p align="center">
+  <img src="static/smart-now-logo.png" height="42" />
+</p>
