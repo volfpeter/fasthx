@@ -139,7 +139,11 @@ The documentation is built with `mkdocs-material` and `mkdocstrings`.
 
 ## Contributing
 
-All contributions are welcome.
+Feel free to ask questions or request new features.
+
+And of course all contributions are welcome, including more documentation, examples, code, and tests.
+
+The goal is to make `fasthx` a well-rounded project that makes even your most complex HTMX use-cases easy to implement.
 
 ## Contributors
 
