@@ -99,8 +99,21 @@ def page(
     """
 
     def decorator(func: MaybeAsyncFunc[P, T]) -> Callable[P, Coroutine[None, None, Response]]:
+        # Allow page routes to still have their own Request object defined.
+        sig = inspect.signature(func)
+        append_signature = True
+        for idx, parameter in enumerate(sig.parameters.values()):
+            if parameter.annotation == Request:
+                append_signature = False
+                break
+
         @wraps(func)  # type: ignore[arg-type]
-        async def wrapper(*args: P.args, __page_request: Request, **kwargs: P.kwargs) -> T | Response:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T | Response:
+            if append_signature:
+                request = kwargs.pop("__page_request")
+            else:
+                request = kwargs.get(parameter.name, args[idx] if idx < len(args) else None)
+
             try:
                 result = await execute_maybe_sync_func(func, *args, **kwargs)
                 renderer = render
@@ -113,7 +126,7 @@ def page(
 
             response = get_response(kwargs)
             rendered = await execute_maybe_sync_func(
-                renderer, result, context=kwargs, request=__page_request
+                renderer, result, context=kwargs, request=request
             )
             return (
                 HTMLResponse(
@@ -135,6 +148,6 @@ def page(
                 inspect.Parameter.KEYWORD_ONLY,
                 annotation=Request,
             ),
-        )
+        ) if append_signature else wrapper
 
     return decorator
