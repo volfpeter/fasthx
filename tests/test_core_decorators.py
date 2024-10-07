@@ -56,7 +56,7 @@ def hx_app() -> FastAPI:  # noqa: C901
 
     @app.get("/htmx-or-data")
     @hx(render_user_list)
-    def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[User]:
+    def htmx_or_data(random_number: DependsRandomNumber, response: Response, request: Request) -> list[User]:
         response.headers["test-header"] = "exists"
         return users
 
@@ -65,7 +65,7 @@ def hx_app() -> FastAPI:  # noqa: C901
 
     @app.get("/htmx-only")  # type: ignore
     @hx(async_render_user_list, no_data=True)
-    async def htmx_only(random_number: DependsRandomNumber) -> list[User]:
+    async def htmx_only(random_number: DependsRandomNumber, *, request: Request) -> list[User]:
         return users
 
     @app.get("/error/{kind}")  # type: ignore
