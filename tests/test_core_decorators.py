@@ -44,6 +44,16 @@ def hx_app() -> FastAPI:  # noqa: C901
     def index(random_number: DependsRandomNumber) -> list[User]:
         return users
 
+    @app.get("/page-request-dependency-args")
+    @page(render_user_list)
+    def prd_a(random_number: DependsRandomNumber, request: Request) -> list[User]:
+        return users
+
+    @app.get("/page-request-dependency-kwargs")
+    @page(render_user_list)
+    def prd_kw(random_number: DependsRandomNumber, *, request: Request) -> list[User]:
+        return users
+
     @app.get("/htmx-or-data")
     @hx(render_user_list)
     def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[User]:
@@ -103,6 +113,8 @@ def hx_client(hx_app: FastAPI) -> TestClient:
         ("/", {"HX-Request": "true"}, 200, user_list_html, {}),
         ("/", None, 200, user_list_html, {}),
         ("/", {"HX-Request": "false"}, 200, user_list_html, {}),
+        ("/page-request-dependency-args", None, 200, user_list_html, {}),
+        ("/page-request-dependency-kwargs", None, 200, user_list_html, {}),
         # hx() - returns JSON for non-HTMX requests.
         ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html, {"test-header": "exists"}),
         ("/htmx-or-data", None, 200, user_list_json, {"test-header": "exists"}),
