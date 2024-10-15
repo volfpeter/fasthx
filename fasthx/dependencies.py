@@ -32,10 +32,10 @@ def get_page_request(request: Request) -> RequestAlias:
     return request
 
 
-DependsHXRequest = Annotated[RequestAlias | None, Depends(get_hx_request)]
+DependsHXRequest = Annotated[RequestAlias | Request | None, Depends(get_hx_request)]
 """Annotated type (dependency) for `get_hx_request()` for FastAPI."""
 
-DependsPageRequest = Annotated[RequestAlias, Depends(get_page_request)]
+DependsPageRequest = Annotated[RequestAlias | Request, Depends(get_page_request)]
 """
 Annotated `Request` dependency alias.
 
