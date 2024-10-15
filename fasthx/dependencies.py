@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Annotated, Any, TypeAlias
+from typing import TYPE_CHECKING, Annotated, Any, TypeAlias
 
 from fastapi import Depends, Header, Request
 
@@ -32,12 +32,16 @@ def get_page_request(request: Request) -> RequestAlias:
     return request
 
 
-DependsHXRequest = Annotated[RequestAlias | Request | None, Depends(get_hx_request)]
-"""Annotated type (dependency) for `get_hx_request()` for FastAPI."""
+if TYPE_CHECKING:
+    DependsHXRequest: TypeAlias = Request | None
+    DependsPageRequest: TypeAlias = Request
+else:
+    DependsHXRequest = Annotated[RequestAlias | Request | None, Depends(get_hx_request)]
+    """Annotated type (dependency) for `get_hx_request()` for FastAPI."""
 
-DependsPageRequest = Annotated[RequestAlias | Request, Depends(get_page_request)]
-"""
-Annotated `Request` dependency alias.
+    DependsPageRequest = Annotated[RequestAlias | Request, Depends(get_page_request)]
+    """
+    Annotated `Request` dependency alias.
 
-Workaround for this FastAPI bug: https://github.com/fastapi/fastapi/discussions/12403
-"""
+    Workaround for this FastAPI bug: https://github.com/fastapi/fastapi/discussions/12403
+    """

@@ -1,9 +1,9 @@
 import inspect
 from collections.abc import Callable
 from functools import wraps
-from typing import Coroutine, cast
+from typing import Coroutine
 
-from fastapi import HTTPException, Request, Response, status
+from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse
 
 from .dependencies import DependsHXRequest, DependsPageRequest
@@ -57,12 +57,7 @@ def hx(
                 return result
 
             response = get_response(kwargs)
-            rendered = await execute_maybe_sync_func(
-                renderer,
-                result,
-                context=kwargs,
-                request=cast(Request, __hx_request),
-            )
+            rendered = await execute_maybe_sync_func(renderer, result, context=kwargs, request=__hx_request)
 
             return (
                 HTMLResponse(
@@ -120,10 +115,7 @@ def page(
 
             response = get_response(kwargs)
             rendered = await execute_maybe_sync_func(
-                renderer,
-                result,
-                context=kwargs,
-                request=cast(Request, __page_request),
+                renderer, result, context=kwargs, request=__page_request
             )
             return (
                 HTMLResponse(
