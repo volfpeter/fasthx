@@ -3,10 +3,10 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Coroutine
 
-from fastapi import HTTPException, Request, Response, status
+from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse
 
-from .dependencies import DependsHXRequest
+from .dependencies import DependsHXRequest, DependsPageRequest
 from .typing import HTMLRenderer, MaybeAsyncFunc, P, T
 from .utils import append_to_signature, execute_maybe_sync_func, get_response
 
@@ -100,7 +100,9 @@ def page(
 
     def decorator(func: MaybeAsyncFunc[P, T]) -> Callable[P, Coroutine[None, None, Response]]:
         @wraps(func)  # type: ignore[arg-type]
-        async def wrapper(*args: P.args, __page_request: Request, **kwargs: P.kwargs) -> T | Response:
+        async def wrapper(
+            *args: P.args, __page_request: DependsPageRequest, **kwargs: P.kwargs
+        ) -> T | Response:
             try:
                 result = await execute_maybe_sync_func(func, *args, **kwargs)
                 renderer = render
@@ -133,7 +135,7 @@ def page(
             inspect.Parameter(
                 "__page_request",
                 inspect.Parameter.KEYWORD_ONLY,
-                annotation=Request,
+                annotation=DependsPageRequest,
             ),
         )
 

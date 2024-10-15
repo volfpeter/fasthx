@@ -41,12 +41,19 @@ def hx_app() -> FastAPI:  # noqa: C901
 
     @app.get("/")
     @page(render_user_list)
-    def index(random_number: DependsRandomNumber) -> list[User]:
+    def index(
+        request: Request,  # Testing workaround for FastAPI bug. https://github.com/fastapi/fastapi/pull/12406
+        random_number: DependsRandomNumber,
+    ) -> list[User]:
         return users
 
     @app.get("/htmx-or-data")
     @hx(render_user_list)
-    def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[User]:
+    def htmx_or_data(
+        request: Request,  # Testing workaround for FastAPI bug. https://github.com/fastapi/fastapi/pull/12406
+        random_number: DependsRandomNumber,
+        response: Response,
+    ) -> list[User]:
         response.headers["test-header"] = "exists"
         return users
 
