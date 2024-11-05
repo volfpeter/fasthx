@@ -311,7 +311,9 @@ class Jinja:
             self._make_render_function(template, make_context=make_context, prefix=prefix),
             render_error=None
             if error_template is None
-            else self._make_render_function(error_template, make_context=make_context, prefix=prefix),
+            else self._make_render_function(
+                error_template, make_context=make_context, prefix=prefix, error_renderer=True
+            ),
             no_data=self.no_data or no_data,
         )
 
@@ -341,7 +343,9 @@ class Jinja:
             self._make_render_function(template, make_context=make_context, prefix=prefix),
             render_error=None
             if error_template is None
-            else self._make_render_function(error_template, make_context=make_context, prefix=prefix),
+            else self._make_render_function(
+                error_template, make_context=make_context, prefix=prefix, error_renderer=True
+            ),
         )
 
     def _make_render_function(
@@ -350,6 +354,7 @@ class Jinja:
         *,
         make_context: JinjaContextFactory,
         prefix: str | None,
+        error_renderer: bool = False,
     ) -> HTMLRenderer[Any]:
         """
         Creates an `HTMLRenderer` with the given configuration.
@@ -358,10 +363,16 @@ class Jinja:
             template: The template the renderer function should use.
             make_context: The Jinja rendering context factory to use.
             prefix: Optional template name prefix.
+            error_renderer: Whether this is an error renderer creation.
         """
 
         def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
-            template_name = self._resolve_template_name(template, prefix=prefix, request=request)
+            template_name = self._resolve_template_name(
+                template,
+                error=result if error_renderer else None,
+                prefix=prefix,
+                request=request,
+            )
             return self._make_response(
                 template_name,
                 jinja_context=make_context(route_result=result, route_context=context),
@@ -413,6 +424,7 @@ class Jinja:
 
         Arguments:
             template: The template selector.
+            error: The error raised by the route.
             prefix: Optional template name prefix.
             request: The current request.
 
