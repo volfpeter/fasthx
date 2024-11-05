@@ -105,5 +105,5 @@ class RequestComponentSelector(Protocol[Tco]):
         ...
 
 
-ComponentSelector: TypeAlias = str | RequestComponentSelector[T]
+ComponentSelector: TypeAlias = T | RequestComponentSelector[T]
 """Type alias for known component selectors."""
