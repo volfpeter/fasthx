@@ -35,7 +35,7 @@ class RenderedError(Exception):
 
 
 @pytest.fixture
-def jinja_app() -> FastAPI:
+def jinja_app() -> FastAPI:  # noqa: C901
     app = FastAPI()
 
     jinja = Jinja(Jinja2Templates("tests/templates"))
@@ -88,6 +88,7 @@ def jinja_app() -> FastAPI:
         return billy
 
     @app.get("/error")
+    @app.get("/error/{kind}")
     @jinja.hx(
         TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
         error_template=TemplateHeader(
@@ -98,20 +99,29 @@ def jinja_app() -> FastAPI:
         ),
         no_data=True,
     )
-    def error(response: Response) -> None:
+    def error(response: Response, kind: str | None = None) -> None:
+        if kind:
+            # Unhandled error type to see if we get HTTP 500
+            raise ValueError(kind)
+
         raise RenderedError({"a": 1, "b": 2}, response=response)
 
     @app.get("/error-page")
+    @app.get("/error-page/{kind}")
     @jinja.page(
         TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
         error_template=TemplateHeader(
             "X-Error-Component",
             {},
             default="hello-world.jinja",
-            error=(RenderedError, TypeError, ValueError),  # Test error tuple
+            error=(RenderedError, TypeError, SyntaxError),  # Test error tuple
         ),
     )
-    def error_page(response: Response) -> None:
+    def error_page(response: Response, kind: str | None = None) -> None:
+        if kind:
+            # Unhandled error type to see if we get HTTP 500
+            raise ValueError(kind)
+
         raise RenderedError({"a": 1, "b": 2}, response=response)
 
     @app.get("/global-no-data")
@@ -194,8 +204,10 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
         ("/htmx-only", {"HX-Request": "false"}, 400, "", {}),
         # hx() error rendering
         ("/error", {"HX-Request": "true"}, 456, "Hello World!", {}),
+        ("/error/value-error", {"HX-Request": "true"}, 500, "", {}),
         # page() error rendering
         ("/error-page", None, 456, "Hello World!", {}),
+        ("/error-page/value-error", None, 500, "None", {}),
         # Globally disabled data responses
         ("/global-no-data", None, 400, "", {}),
     ),
