@@ -262,7 +262,7 @@ class TemplateHeader:
 
 @dataclass(frozen=True, slots=True)
 class Jinja:
-    """Jinja2 (renderer) decorator factory."""
+    """Jinja2 renderer utility with FastAPI route decorators."""
 
     templates: Jinja2Templates
     """The Jinja2 templates of the application."""
@@ -286,18 +286,18 @@ class Jinja:
         template: ComponentSelector[str],
         *,
         error_template: ComponentSelector[str] | None = None,
-        no_data: bool = False,
         make_context: JinjaContextFactory | None = None,
+        no_data: bool = False,
         prefix: str | None = None,
     ) -> Callable[[MaybeAsyncFunc[P, Any]], Callable[P, Coroutine[None, None, Any | Response]]]:
         """
-        Decorator for rendering a route's return value to HTML using the Jinja2 template
-        with the given name, if the request was an HTMX one.
+        Decorator for rendering a route's result if the request was an HTMX one.
 
         Arguments:
             template: The Jinja2 template selector to use.
-            no_data: If set, the route will only accept HTMX requests.
+            error_template: The Jinja2 template selector to use for route error rendering.
             make_context: Route-specific override for the `make_context` property.
+            no_data: If set, the route will only accept HTMX requests.
             prefix: Optional template name prefix.
 
         Returns:
@@ -326,12 +326,13 @@ class Jinja:
         prefix: str | None = None,
     ) -> Callable[[MaybeAsyncFunc[P, Any]], Callable[P, Coroutine[None, None, Any | Response]]]:
         """
-        Decorator for rendering a route's return value to HTML using the Jinja2 template
-        with the given name. This decorator triggers HTML rendering regardless of whether
-        the request was HTMX or not.
+        Decorator for rendering a route's result.
+
+        This decorator triggers HTML rendering regardless of whether the request was HTMX or not.
 
         Arguments:
             template: The Jinja2 template selector to use.
+            error_template: The Jinja2 template selector to use for route error rendering.
             make_context: Route-specific override for the `make_context` property.
             prefix: Optional template name prefix.
         """
