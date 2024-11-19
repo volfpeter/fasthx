@@ -9,15 +9,15 @@
 
 # FastHX
 
-FastAPI and HTMX, the right way.
+FastAPI server-side rendering with built-in HTMX support.
 
 Key features:
 
 - **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
-- Works with **any templating engine** or server-side rendering library, e.g. `markyp-html` or `dominate`.
-- Built-in **Jinja2 templating support** (even with multiple template folders).
+- Built for **HTMX**, but can be used without it.
+- Works with **any templating engine** or server-side rendering library, e.g. `htmy`, `jinja2`, or `dominate`.
 - Gives the rendering engine **access to all dependencies** of the decorated route.
-- FastAPI **routes will keep working normally by default** if they receive **non-HTMX** requests, so the same route can serve data and render HTML at the same time.
+- HTMX **routes work as expected** if they receive non-HTMX requests, so the same route can serve data and render HTML at the same time.
 - **Response headers** you set in your routes are kept after rendering, as you would expect in FastAPI.
 - **Correct typing** makes it possible to apply other (typed) decorators to your routes.
 - Works with both **sync** and **async routes**.
@@ -30,15 +30,62 @@ The package is available on PyPI and can be installed with:
 $ pip install fasthx
 ```
 
+The package has optional dependencies for the following **official integrations**:
+
+- [htmy](https://volfpeter.github.io/htmy/): `pip install fasthx[htmy]`.
+- [jinja][https://jinja.palletsprojects.com/en/stable/]: `pip install fasthx[jinja]`.
+
 ## Examples
 
 For complete, but simple examples that showcase the basic use of `FastHX`, please see the [examples](https://github.com/volfpeter/fasthx/tree/main/examples) folder.
 
-If you're looking for a more complex (`Jinja2`) example with features like active search, lazy-loading, server-sent events, custom server-side HTMX triggers, dialogs, and TailwindCSS and DaisyUI integration, check out this [FastAPI-HTMX-Tailwind example](https://github.com/volfpeter/fastapi-htmx-tailwind-example).
+### HTMY templating
+
+Requires: `pip install fasthx[htmy]`.
+
+Serving HTML and HTMX requests with [htmy](https://volfpeter.github.io/htmy/) is as easy as creating a `fasthx.htmy.HTMY` instance and using its `hx()` and `page()` decorator methods on your routes.
+
+The example below assumes the existence of an `IndexPage` and a `UserList` `htmy` component. The full working example with the `htmy` components can be found [here](https://github.com/volfpeter/fasthx/tree/main/examples/htmy-rendering).
+
+```python
+from datetime import date
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from fasthx.htmy import HTMY
+
+# Pydantic model for the application
+class User(BaseModel):
+    name: str
+    birthday: date
+
+# Create the FastAPI application.
+app = FastAPI()
+
+# Create the FastHX HTMY instance that renders all route results.
+htmy = HTMY()
+
+@app.get("/users")
+@htmy.hx(UserList)  # Render the result using the UserList component.
+def get_users(rerenders: int = 0) -> list[User]:
+    return [
+        User(name="John", birthday=date(1940, 10, 9)),
+        User(name="Paul", birthday=date(1942, 6, 18)),
+        User(name="George", birthday=date(1943, 2, 25)),
+        User(name="Ringo", birthday=date(1940, 7, 7)),
+    ]
+
+@app.get("/")
+@htmy.page(IndexPage)  # Render the index page.
+def index() -> None: ...
+```
 
 ### Jinja2 templating
 
-To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML, saving you some boilerplate code. See the example code below:
+Requires: `pip install fasthx[jinja]`.
+
+To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
 ```python
 from fastapi import FastAPI
@@ -79,9 +126,15 @@ def htmx_only() -> list[User]:
     return [User(first_name="Billy", last_name="Shears")]
 ```
 
+See the full working example [here](https://github.com/volfpeter/fasthx/tree/main/examples/jinja-rendering).
+
 ### Custom templating
 
-If you're not into Jinja templating, the `hx()` and `page()` decorators give you all the flexibility you need: you can integrate any HTML rendering or templating engine into `fasthx` simply by implementing the `HTMLRenderer` protocol. Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
+Requires: `pip install fasthx`.
+
+If you would like to use a rendering engine without FastHX integration, you can easily build on the `hx()` and `page()` decorators which give you all the functionality you will need. All you need to do is implement the `HTMLRenderer` protocol.
+
+Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
 ```python
 from typing import Annotated, Any
@@ -126,6 +179,12 @@ def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
 ```
+
+See the full working example [here](https://github.com/volfpeter/fasthx/tree/main/examples/custom-rendering).
+
+### External examples
+
+- [FastAPI-HTMX-Tailwind example](https://github.com/volfpeter/fastapi-htmx-tailwind-example): A complex `Jinja2` example with features like active search, lazy-loading, server-sent events, custom server-side HTMX triggers, dialogs, and TailwindCSS and DaisyUI integration.
 
 ## Dependencies
 
