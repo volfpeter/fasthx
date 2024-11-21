@@ -49,6 +49,7 @@ nav:
       - examples/jinja-templating.md
   - API Reference:
       - api/core-decorators.md
+      - Component Selectors: api/component_selectors.md
       - HTMY: api/htmy.md
       - api/jinja.md
       - api/dependencies.md
