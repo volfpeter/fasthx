@@ -2,12 +2,13 @@ import random
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
+from xml.sax.saxutils import quoteattr
 
 from fastapi import FastAPI
 from htmy import Component, ComponentType, Context, html
 from pydantic import BaseModel
 
-from fasthx.htmy import HTMY, CurrentRequest, RouteParams
+from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
 
 # -- Models
 
@@ -42,6 +43,7 @@ class UserList:
     """User list component that reloads itself every second."""
 
     users: list[User]
+    ordered: bool = False
 
     def htmy(self, context: Context) -> Component:
         # Get the current request and the route parameters from the request.
@@ -55,10 +57,14 @@ class UserList:
             html.p(html.span("Last request URL: ", class_="font-semibold"), str(request.url)),
             html.p(html.span("Rerenders: ", class_="font-semibold"), str(rerenders)),
             html.hr(),
-            html.ul(*(UserListItem(u) for u in self.users), class_="list-disc list-inside"),
+            html.ol(*(UserListItem(u) for u in self.users), class_="list-decimal list-inside")
+            if self.ordered
+            else html.ul(*(UserListItem(u) for u in self.users), class_="list-disc list-inside"),
             hx_trigger="load delay:1000",
             hx_get=f"/users?rerenders={rerenders+1}",
             hx_swap="outerHTML",
+            # Request an ordered or unordered list randomly for the next rendering.
+            hx_headers=f'{{"X-Component": "{random.choice(("ordered", "unordered"))}"}}',  # noqa: S311
             class_="flex flex-col gap-4",
         )
 
@@ -121,8 +127,17 @@ htmy = HTMY()
 
 
 @app.get("/users")
-@htmy.hx(UserList)
-def get_users(rerenders: int = 0) -> list[User]:
+@htmy.hx(
+    ComponentHeader(
+        "X-Component",
+        {
+            "ordered": lambda users: UserList(users, True),
+            "unordered": UserList,
+        },
+        default=UserList,
+    )
+)
+def get_users(rerenders: int = 0, ordered_list: bool = False) -> list[User]:
     """Returns the list of users in random order."""
     result = [
         User(name="John", birthday=date(1940, 10, 9)),
