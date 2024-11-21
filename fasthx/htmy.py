@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeAlias
 import htmy as h
 from fastapi import Request, Response
 
+from .component_selectors import ComponentHeader as _ComponentHeader
 from .core_decorators import hx, page
 from .typing import ComponentSelector, HTMLRenderer, MaybeAsyncFunc, P, RequestComponentSelector, T
 
@@ -18,6 +19,15 @@ else:
 ContextProcessor: TypeAlias = Callable[[Request], h.Context]
 HTMYComponentFactory: TypeAlias = Callable[[T], h.Component]
 HTMYComponentSelector: TypeAlias = ComponentSelector[HTMYComponentFactory[T]]
+
+
+class ComponentHeader(_ComponentHeader[HTMYComponentFactory[T]]):
+    """
+    `RequestComponentSelector` for HTMY components that takes selects the rendered component
+    based on a request header.
+    """
+
+    ...
 
 
 class CurrentRequest:
@@ -126,7 +136,7 @@ class HTMY:
         self,
         component_selector: HTMYComponentSelector[T],
         *,
-        error_compoent_selector: HTMYComponentSelector[Exception] | None = None,
+        error_component_selector: HTMYComponentSelector[Exception] | None = None,
         no_data: bool = False,
     ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
         """
@@ -140,8 +150,8 @@ class HTMY:
         return hx(
             self._make_render_function(component_selector),
             render_error=None
-            if error_compoent_selector is None
-            else self._make_error_render_function(error_compoent_selector),
+            if error_component_selector is None
+            else self._make_error_render_function(error_component_selector),
             no_data=self.no_data or no_data,
         )
 
@@ -149,7 +159,7 @@ class HTMY:
         self,
         component_selector: HTMYComponentSelector[T],
         *,
-        error_compoent_selector: HTMYComponentSelector[Exception] | None = None,
+        error_component_selector: HTMYComponentSelector[Exception] | None = None,
     ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
         """
         Decorator for rendering a route's result.
@@ -163,8 +173,8 @@ class HTMY:
         return page(
             self._make_render_function(component_selector),
             render_error=None
-            if error_compoent_selector is None
-            else self._make_error_render_function(error_compoent_selector),
+            if error_component_selector is None
+            else self._make_error_render_function(error_component_selector),
         )
 
     def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> HTMLRenderer[T]:
