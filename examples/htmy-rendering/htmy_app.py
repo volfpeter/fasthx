@@ -2,7 +2,6 @@ import random
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
-from xml.sax.saxutils import quoteattr
 
 from fastapi import FastAPI
 from htmy import Component, ComponentType, Context, html
@@ -128,6 +127,8 @@ htmy = HTMY()
 
 @app.get("/users")
 @htmy.hx(
+    # Use a header-based component selector that can serve ordered or
+    # unordered user lists, depending on what the client requests.
     ComponentHeader(
         "X-Component",
         {
