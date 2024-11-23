@@ -15,7 +15,7 @@ from .data import (
     user_list_json,
     users,
 )
-from .htmy_components import HelloWorld, Profile, UserList
+from .htmy_components import ContextProcessors, HelloWorld, Profile, UserList
 
 billy_html_header = "<h1 >Billy Shears (active=True)</h1>"
 billy_html_paragraph = "<p >Billy Shears (active=True)</p>"
@@ -39,8 +39,9 @@ class RenderedError(Exception):
 def htmy_app() -> FastAPI:  # noqa: C901
     app = FastAPI()
 
-    htmy = HTMY()
+    htmy = HTMY(context_processors=ContextProcessors.all())
     no_data_htmy = HTMY(no_data=True)
+    no_data_htmy.context_processors.extend(ContextProcessors.all())
 
     @app.get("/")
     @htmy.page(UserList)

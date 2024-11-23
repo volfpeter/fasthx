@@ -1,13 +1,40 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, final
+from typing import Any, ClassVar, final
 
 from fastapi import Request
 from htmy import Component, Context, html
 
-from fasthx.htmy import CurrentRequest, RouteParams
+from fasthx.htmy import ContextProcessor, CurrentRequest, RouteParams
 
 from .data import User
+
+
+class ContextProcessors:
+    first_key: ClassVar[str] = "ContextProcessors.first"
+    first_value: ClassVar[object] = object()
+
+    second_key: ClassVar[str] = "ContextProcessors.second"
+    second_value: ClassVar[object] = object()
+
+    third_key: ClassVar[str] = "ContextProcessors.third"
+    third_value: ClassVar[object] = object()
+
+    @classmethod
+    def first(cls, request: Request) -> Context:
+        return {cls.first_key: cls.first_value}
+
+    @classmethod
+    def second(cls, request: Request) -> Context:
+        return {cls.second_key: cls.second_value}
+
+    @classmethod
+    def third(cls, request: Request) -> Context:
+        return {cls.third_key: cls.third_value}
+
+    @classmethod
+    def all(cls) -> list[ContextProcessor]:
+        return [cls.first, cls.second, cls.third]
 
 
 class HelloWorld:
@@ -32,6 +59,11 @@ class BaseUserComponent:
         # Test that route parameters are always in the context.
         params = RouteParams.from_context(context)
         assert isinstance(params, RouteParams)
+
+        # Test the things that are added by context processors.
+        assert context[ContextProcessors.first_key] is ContextProcessors.first_value
+        assert context[ContextProcessors.second_key] is ContextProcessors.second_value
+        assert context[ContextProcessors.third_key] is ContextProcessors.third_value
 
         # Render content
         return self._htmy(context)
