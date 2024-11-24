@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 from fastapi import FastAPI, Response
 from fastapi.testclient import TestClient
