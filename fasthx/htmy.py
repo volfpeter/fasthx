@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 else:
     Self: TypeAlias = Any  # type: ignore[no-redef]
 
-ContextProcessor: TypeAlias = Callable[[Request], h.Context]
+RequestProcessor: TypeAlias = Callable[[Request], h.Context]
 HTMYComponentFactory: TypeAlias = Callable[[T], h.Component]
 HTMYComponentSelector: TypeAlias = ComponentSelector[HTMYComponentFactory[T]]
 
@@ -59,7 +59,7 @@ class CurrentRequest:
 @dataclass(frozen=True, slots=True)
 class RouteParams:
     """
-    HTMY context aware utility for accessing route parameters.
+    HTMY context aware utility for accessing route parameters (dependencies).
 
     For convenience, it is a partial, readonly mapping implementation. Supported mapping methods:
     `__contains__`, `__getitem___()`, and `get()`. For more complex use-cases, you can rely on the
@@ -111,7 +111,7 @@ class HTMY:
     - The current `Request` that can be retrieved with `CurrentRequest.from_context()` in components.
     - All route parameters (as a `RouteParams` instance) that can be retrieved with
       `RouteParams.from_context()` in components.
-    - Everything added through `self.context_processors`.
+    - Everything added through `self.request_processors`.
     - The default context of `self.htmy`.
     """
 
@@ -126,7 +126,7 @@ class HTMY:
     will have no effect.
     """
 
-    context_processors: list[ContextProcessor] = field(default_factory=list, kw_only=True)
+    request_processors: list[RequestProcessor] = field(default_factory=list, kw_only=True)
     """
     A list of functions that expect the current request and return an `htmy` `Context` that should
     be used during rendering in addition to the default context of `self.htmy`.
@@ -213,8 +213,8 @@ class HTMY:
         # Add all route params to the context.
         result.update(RouteParams(route_params).to_context())
 
-        # Run all context processors and add the result to the context.
-        for cp in self.context_processors:
+        # Run all request processors and add the result to the context.
+        for cp in self.request_processors:
             result.update(cp(request))
 
         return result

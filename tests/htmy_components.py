@@ -5,19 +5,19 @@ from typing import Any, ClassVar, final
 from fastapi import Request
 from htmy import Component, Context, html
 
-from fasthx.htmy import ContextProcessor, CurrentRequest, RouteParams
+from fasthx.htmy import CurrentRequest, RequestProcessor, RouteParams
 
 from .data import User
 
 
-class ContextProcessors:
-    first_key: ClassVar[str] = "ContextProcessors.first"
+class RequestProcessors:
+    first_key: ClassVar[str] = "RequestProcessors.first"
     first_value: ClassVar[object] = object()
 
-    second_key: ClassVar[str] = "ContextProcessors.second"
+    second_key: ClassVar[str] = "RequestProcessors.second"
     second_value: ClassVar[object] = object()
 
-    third_key: ClassVar[str] = "ContextProcessors.third"
+    third_key: ClassVar[str] = "RequestProcessors.third"
     third_value: ClassVar[object] = object()
 
     @classmethod
@@ -33,7 +33,7 @@ class ContextProcessors:
         return {cls.third_key: cls.third_value}
 
     @classmethod
-    def all(cls) -> list[ContextProcessor]:
+    def all(cls) -> list[RequestProcessor]:
         return [cls.first, cls.second, cls.third]
 
 
@@ -60,10 +60,10 @@ class BaseUserComponent:
         params = RouteParams.from_context(context)
         assert isinstance(params, RouteParams)
 
-        # Test the things that are added by context processors.
-        assert context[ContextProcessors.first_key] is ContextProcessors.first_value
-        assert context[ContextProcessors.second_key] is ContextProcessors.second_value
-        assert context[ContextProcessors.third_key] is ContextProcessors.third_value
+        # Test the things that are added by request processors.
+        assert context[RequestProcessors.first_key] is RequestProcessors.first_value
+        assert context[RequestProcessors.second_key] is RequestProcessors.second_value
+        assert context[RequestProcessors.third_key] is RequestProcessors.third_value
 
         # Render content
         return self._htmy(context)
