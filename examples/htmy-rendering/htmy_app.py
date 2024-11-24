@@ -1,7 +1,6 @@
 import random
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
 
 from fastapi import FastAPI
 from htmy import Component, ComponentType, Context, html
@@ -105,8 +104,6 @@ class Page:
 class IndexPage:
     """Index page."""
 
-    props: Any = None
-
     def htmy(self, context: Context) -> Component:
         # Lazy load the user list.
         return Page(
@@ -158,7 +155,7 @@ def get_users(rerenders: int = 0, ordered_list: bool = False) -> list[User]:
 
 
 @app.get("/")
-@htmy.page(IndexPage)
+@htmy.page(lambda _: IndexPage())
 def index() -> None:
     """The index page of the application."""
     ...
