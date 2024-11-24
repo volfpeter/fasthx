@@ -45,16 +45,18 @@ class UserList:
     ordered: bool = False
 
     def htmy(self, context: Context) -> Component:
-        # Get the current request and the route parameters from the request.
+        # Load the current request, route parameters, and user agent from the context.
         request = CurrentRequest.from_context(context)
         route_params = RouteParams.from_context(context)
+        user_agent: str = context["user-agent"]
 
-        # Get the rerenders query parameter if there's one (the index page doesn't have it).
-        rerenders: int = route_params.get("rerenders", 0)
+        # Get the rerenders query parameter from the route parameters.
+        rerenders: int = route_params["rerenders"]
 
         return html.div(
-            html.p(html.span("Last request URL: ", class_="font-semibold"), str(request.url)),
+            html.p(html.span("Last request: ", class_="font-semibold"), str(request.url)),
             html.p(html.span("Rerenders: ", class_="font-semibold"), str(rerenders)),
+            html.p(html.span("User agent: ", class_="font-semibold"), user_agent),
             html.hr(),
             html.ol(*(UserListItem(u) for u in self.users), class_="list-decimal list-inside")
             if self.ordered
@@ -122,7 +124,12 @@ class IndexPage:
 app = FastAPI()
 
 # Create the FastHX HTMY instance that renders all route results.
-htmy = HTMY()
+htmy = HTMY(
+    # Register a request processor that adds a user-agent key to the htmy context.
+    request_processors=[
+        lambda request: {"user-agent": request.headers.get("user-agent")},
+    ]
+)
 
 
 @app.get("/users")
