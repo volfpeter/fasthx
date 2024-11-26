@@ -30,41 +30,60 @@ class UserListItem:
     def htmy(self, context: Context) -> Component:
         return html.li(
             html.span(self.user.name, class_="font-semibold"),
-            " ",
-            html.em(f"(born {self.user.birthday.isoformat()})"),
+            html.em(f" (born {self.user.birthday.isoformat()})"),
             class_="text-lg",
         )
 
 
 @dataclass
-class UserList:
-    """User list component that reloads itself every second."""
+class UserOverview:
+    """
+    Component that shows a user list and some additional info about the application's state.
+
+    The component reloads itself every second.
+    """
 
     users: list[User]
     ordered: bool = False
 
     def htmy(self, context: Context) -> Component:
-        # Load the current request, route parameters, and user agent from the context.
+        # Load the current request from the context.
         request = CurrentRequest.from_context(context)
+        # Load route parameters (resolved dependencies) from the context.
         route_params = RouteParams.from_context(context)
+        # Get the user-agent from the context which is added by a request processor.
         user_agent: str = context["user-agent"]
-
         # Get the rerenders query parameter from the route parameters.
         rerenders: int = route_params["rerenders"]
 
-        return html.div(
-            html.p(html.span("Last request: ", class_="font-semibold"), str(request.url)),
-            html.p(html.span("Rerenders: ", class_="font-semibold"), str(rerenders)),
-            html.p(html.span("User agent: ", class_="font-semibold"), user_agent),
-            html.hr(),
-            html.ol(*(UserListItem(u) for u in self.users), class_="list-decimal list-inside")
+        # Create the user list item generator.
+        user_list_items = (UserListItem(u) for u in self.users)
+
+        # Create the ordered or unordered user list.
+        user_list = (
+            html.ol(*user_list_items, class_="list-decimal list-inside")
             if self.ordered
-            else html.ul(*(UserListItem(u) for u in self.users), class_="list-disc list-inside"),
+            else html.ul(*user_list_items, class_="list-disc list-inside")
+        )
+
+        # Randomly decide whether an ordered or unordered list should be rendered next.
+        next_variant = random.choice(("ordered", "unordered"))  # noqa: S311
+
+        return html.div(
+            # -- Some content about the application state.
+            html.p(html.span("Last request: ", class_="font-semibold"), str(request.url)),
+            html.p(html.span("User agent: ", class_="font-semibold"), user_agent),
+            html.p(html.span("Re-renders: ", class_="font-semibold"), str(rerenders)),
+            html.hr(),
+            # -- User list.
+            user_list,
+            # -- HTMX directives.
             hx_trigger="load delay:1000",
             hx_get=f"/users?rerenders={rerenders+1}",
             hx_swap="outerHTML",
-            # Request an ordered or unordered list randomly for the next rendering.
-            hx_headers=f'{{"X-Component": "{random.choice(("ordered", "unordered"))}"}}',  # noqa: S311
+            # Send the next component variant in an X-Component header.
+            hx_headers=f'{{"X-Component": "{next_variant}"}}',
+            # -- Styling
             class_="flex flex-col gap-4",
         )
 
@@ -90,6 +109,7 @@ class Page:
                     html.script(src="https://unpkg.com/htmx.org@2.0.2"),
                 ),
                 html.body(
+                    # Page content
                     self.content,
                     class_=(
                         "h-screen w-screen flex flex-col items-center justify-center "
@@ -106,13 +126,7 @@ class IndexPage:
 
     def htmy(self, context: Context) -> Component:
         # Lazy load the user list.
-        return Page(
-            html.div(
-                hx_get="/users",
-                hx_trigger="load",
-                hx_swap="outerHTML",
-            ),
-        )
+        return Page(html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"))
 
 
 # -- Application
@@ -136,10 +150,10 @@ htmy = HTMY(
     ComponentHeader(
         "X-Component",
         {
-            "ordered": lambda users: UserList(users, True),
-            "unordered": UserList,
+            "ordered": lambda users: UserOverview(users, True),
+            "unordered": UserOverview,
         },
-        default=UserList,
+        default=UserOverview,
     )
 )
 def get_users(rerenders: int = 0, ordered_list: bool = False) -> list[User]:
