@@ -59,7 +59,7 @@ class CurrentRequest:
 @dataclass(frozen=True, slots=True)
 class RouteParams:
     """
-    HTMY context aware utility for accessing route parameters (dependencies).
+    HTMY context aware utility for accessing route parameters (resolved dependencies).
 
     For convenience, it is a partial, readonly mapping implementation. Supported mapping methods:
     `__contains__`, `__getitem___()`, and `get()`. For more complex use-cases, you can rely on the
