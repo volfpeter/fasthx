@@ -132,6 +132,13 @@ htmy = HTMY(
 )
 
 
+@app.get("/")
+@htmy.page(lambda _: IndexPage())
+def index() -> None:
+    """The index page of the application."""
+    ...
+
+
 @app.get("/users")
 @htmy.hx(
     # Use a header-based component selector that can serve ordered or
@@ -145,7 +152,7 @@ htmy = HTMY(
         default=UserOverview,
     )
 )
-def get_users(rerenders: int = 0, ordered_list: bool = False) -> list[User]:
+def get_users(rerenders: int = 0) -> list[User]:
     """Returns the list of users in random order."""
     result = [
         User(name="John", birthday=date(1940, 10, 9)),
@@ -155,10 +162,3 @@ def get_users(rerenders: int = 0, ordered_list: bool = False) -> list[User]:
     ]
     random.shuffle(result)
     return result
-
-
-@app.get("/")
-@htmy.page(lambda _: IndexPage())
-def index() -> None:
-    """The index page of the application."""
-    ...
