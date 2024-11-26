@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from fastapi import FastAPI
-from htmy import Component, ComponentType, Context, html
+from htmy import Component, Context, html
 from pydantic import BaseModel
 
 from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
@@ -89,10 +89,8 @@ class UserOverview:
 
 
 @dataclass
-class Page:
-    """Base page layout."""
-
-    content: ComponentType
+class IndexPage:
+    """Index page with TailwindCSS styling."""
 
     def htmy(self, context: Context) -> Component:
         return (
@@ -109,8 +107,8 @@ class Page:
                     html.script(src="https://unpkg.com/htmx.org@2.0.2"),
                 ),
                 html.body(
-                    # Page content
-                    self.content,
+                    # Page content: lazy-loaded user list.
+                    html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"),
                     class_=(
                         "h-screen w-screen flex flex-col items-center justify-center "
                         " gap-4 bg-slate-800 text-white"
@@ -118,15 +116,6 @@ class Page:
                 ),
             ),
         )
-
-
-@dataclass
-class IndexPage:
-    """Index page."""
-
-    def htmy(self, context: Context) -> Component:
-        # Lazy load the user list.
-        return Page(html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"))
 
 
 # -- Application
