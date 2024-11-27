@@ -25,11 +25,12 @@ def get_random_number() -> int:
 
 DependsRandomNumber = Annotated[int, Depends(get_random_number)]
 
+
+billy_json = billy.model_dump_json()
+lucy_json = lucy.model_dump_json()
+user_list_json = to_json(users).decode()
+
 billy_html_header = "<h1>Billy Shears (active=True)</h1>"
 billy_html_paragraph = "<p>Billy Shears (active=True)</p>"
 billy_html_span = "<span>Billy Shears (active=True)</span>"
-billy_json = billy.model_dump_json()
-lucy_html = "<span>Lucy (active=True)</span>"
-lucy_json = lucy.model_dump_json()
 user_list_html = "<ul><li>Billy Shears (active=True)</li><li>Lucy (active=True)</li></ul>"
-user_list_json = to_json(users).decode()

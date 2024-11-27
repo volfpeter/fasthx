@@ -45,10 +45,13 @@ nav:
   - index.md
   - Examples:
       - Examples: examples/index.md
-      - examples/custom-templating.md
+      - examples/htmy.md
       - examples/jinja-templating.md
+      - examples/custom-templating.md
   - API Reference:
       - api/core-decorators.md
+      - Component Selectors: api/component_selectors.md
+      - HTMY: api/htmy.md
       - api/jinja.md
       - api/dependencies.md
       - api/typing.md

@@ -1,89 +1,88 @@
-from typing import Any
-
 import pytest
 from fastapi import FastAPI, Response
-from fastapi.templating import Jinja2Templates
 from fastapi.testclient import TestClient
 
-from fasthx import Jinja, JinjaContext, JinjaPath, TemplateHeader
+from fasthx.htmy import HTMY, ComponentHeader
 
 from .data import (
     DependsRandomNumber,
     User,
     billy,
-    billy_html_header,
-    billy_html_paragraph,
-    billy_html_span,
     billy_json,
     lucy,
-    user_list_html,
     user_list_json,
     users,
 )
 from .errors import RenderedError
+from .htmy_components import HelloWorld, Profile, RequestProcessors, UserList
+
+billy_html_header = "<h1 >Billy Shears (active=True)</h1>"
+billy_html_paragraph = "<p >Billy Shears (active=True)</p>"
+billy_html_span = "<span >Billy Shears (active=True)</span>"
+user_list_html = "<ul >\n<li >Billy Shears (active=True)</li>\n<li >Lucy (active=True)</li>\n</ul>"
 
 
 @pytest.fixture
-def jinja_app() -> FastAPI:  # noqa: C901
+def htmy_app() -> FastAPI:  # noqa: C901
     app = FastAPI()
 
-    jinja = Jinja(Jinja2Templates("tests/templates"))
-    no_data_jinja = Jinja(Jinja2Templates("tests/templates"), no_data=True)
+    htmy = HTMY(request_processors=RequestProcessors.all())
+    no_data_htmy = HTMY(no_data=True)
+    no_data_htmy.request_processors.extend(RequestProcessors.all())
 
     @app.get("/")
-    @jinja.page("user-list.jinja")
+    @htmy.page(UserList)
     def index() -> list[User]:
         return users
 
     @app.get("/htmx-or-data")
-    @jinja.hx("user-list.jinja")
-    def htmx_or_data(response: Response) -> dict[str, list[User]]:
+    @htmy.hx(UserList)
+    def htmx_or_data(response: Response) -> list[User]:
         response.headers["test-header"] = "exists"
-        return {"items": users}
+        return users
 
     @app.get("/htmx-only")
-    @jinja.hx("user-list.jinja", no_data=True)
+    @htmy.hx(UserList, no_data=True)
     async def htmx_only(random_number: DependsRandomNumber) -> tuple[User, ...]:
         return (billy, lucy)
 
     @app.get("/htmx-or-data/{id}")
-    @jinja.hx(
-        TemplateHeader(
+    @htmy.hx(
+        ComponentHeader(
             "X-Component",
             {
-                "header": "h1.jinja",
-                "paragraph": "p.jinja",
-                "hello-world": JinjaPath("hello-world.jinja"),
+                "header": Profile.h1,
+                "paragraph": Profile.p,
+                "hello-world": HelloWorld,
             },
-            default="span.jinja",
-        ),
-        prefix="profile",
+            default=Profile.span,
+        )
     )
     def htmx_or_data_by_id(id: int) -> User:
         return billy
 
     @app.get("/header-with-no-default")
-    @jinja.hx(
-        TemplateHeader(
+    @htmy.hx(
+        ComponentHeader(
             "X-Component",
             {
-                "header": "profile/h1.jinja",
-                "paragraph": "profile/p.jinja",
-                "span": "profile/span.jinja",
+                "header": Profile.h1,
+                "paragraph": Profile.p,
+                "span": Profile.span,
             },
         ),
     )
     def header_with_no_default() -> User:
         return billy
 
-    @app.get("/error")
+    @app.get("/error")  # type: ignore[arg-type]
     @app.get("/error/{kind}")
-    @jinja.hx(
-        TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
-        error_template=TemplateHeader(
+    @htmy.hx(
+        ComponentHeader("X-Component", {}),  # No rendering if there's no exception.
+        error_component_selector=ComponentHeader(
             "X-Error-Component",
             {},
-            default="hello-world.jinja",
+            default=HelloWorld,
             error=RenderedError,
         ),
         no_data=True,
@@ -95,14 +94,14 @@ def jinja_app() -> FastAPI:  # noqa: C901
 
         raise RenderedError({"a": 1, "b": 2}, response=response)
 
-    @app.get("/error-page")
+    @app.get("/error-page")  # type: ignore[arg-type]
     @app.get("/error-page/{kind}")
-    @jinja.page(
-        TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
-        error_template=TemplateHeader(
+    @htmy.page(
+        ComponentHeader("X-Component", {}),  # No rendering if there's no exception.
+        error_component_selector=ComponentHeader(
             "X-Error-Component",
             {},
-            default="hello-world.jinja",
+            default=HelloWorld,
             error=(RenderedError, TypeError, SyntaxError),  # Test error tuple
         ),
     )
@@ -114,7 +113,7 @@ def jinja_app() -> FastAPI:  # noqa: C901
         raise RenderedError({"a": 1, "b": 2}, response=response)
 
     @app.get("/global-no-data")
-    @no_data_jinja.hx("user-list.jinja", no_data=False)
+    @no_data_htmy.hx(UserList, no_data=False)
     def global_no_data() -> list[User]:
         return []
 
@@ -122,33 +121,26 @@ def jinja_app() -> FastAPI:  # noqa: C901
 
 
 @pytest.fixture
-def jinja_client(jinja_app: FastAPI) -> TestClient:
+def htmy_client(htmy_app: FastAPI) -> TestClient:
     # raise_server_exception must be disabled. Without it, unhandled server
     # errors would result in an exception instead of a HTTP 500 response.
-    return TestClient(jinja_app, raise_server_exceptions=False)
+    return TestClient(htmy_app, raise_server_exceptions=False)
 
 
 @pytest.mark.parametrize(
     ("route", "headers", "status", "expected", "response_headers"),
     (
-        # jinja.page() - always renders the HTML result.
+        # htmy.page() - always renders the HTML result.
         ("/", {"HX-Request": "true"}, 200, user_list_html, {}),
         ("/", None, 200, user_list_html, {}),
         ("/", {"HX-Request": "false"}, 200, user_list_html, {}),
-        # jinja.hx() - returns JSON for non-HTMX requests.
+        # htmy.hx() - returns JSON for non-HTMX requests.
         ("/htmx-or-data", {"HX-Request": "true"}, 200, user_list_html, {"test-header": "exists"}),
-        ("/htmx-or-data", None, 200, f'{{"items":{user_list_json}}}', {"test-header": "exists"}),
-        (
-            "/htmx-or-data",
-            {"HX-Request": "false"},
-            200,
-            f'{{"items":{user_list_json}}}',
-            {"test-header": "exists"},
-        ),
+        ("/htmx-or-data", None, 200, user_list_json, {"test-header": "exists"}),
+        ("/htmx-or-data", {"HX-Request": "false"}, 200, user_list_json, {"test-header": "exists"}),
         ("/htmx-or-data/1", None, 200, billy_json, {}),
         ("/htmx-or-data/2", {"HX-Request": "true"}, 200, billy_html_span, {}),
         ("/htmx-or-data/3", {"HX-Request": "true", "X-Component": "header"}, 200, billy_html_header, {}),
-        # JinjaPath test (decorator prefix not used).
         ("/htmx-or-data/3", {"HX-Request": "true", "X-Component": "hello-world"}, 200, "Hello World!", {}),
         (
             "/htmx-or-data/3",
@@ -187,7 +179,7 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
             {},
         ),
         ("/header-with-no-default", {"HX-Request": "true"}, 500, "", {}),
-        # jinja.hx(no_data=True) - raises exception for non-HTMX requests.
+        # htmy.hx(no_data=True) - raises exception for non-HTMX requests.
         ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html, {}),
         ("/htmx-only", None, 400, "", {}),
         ("/htmx-only", {"HX-Request": "false"}, 400, "", {}),
@@ -201,15 +193,15 @@ def jinja_client(jinja_app: FastAPI) -> TestClient:
         ("/global-no-data", None, 400, "", {}),
     ),
 )
-def test_jinja(
-    jinja_client: TestClient,
+def test_htmy(
+    htmy_client: TestClient,
     route: str,
     headers: dict[str, str] | None,
     status: int,
     expected: str,
     response_headers: dict[str, str],
 ) -> None:
-    response = jinja_client.get(route, headers=headers)
+    response = htmy_client.get(route, headers=headers)
     assert response.status_code == status
     if status >= 400:
         return
@@ -218,67 +210,3 @@ def test_jinja(
     assert result == expected
 
     assert all((response.headers.get(key) == value) for key, value in response_headers.items())
-
-
-class TestJinjaContext:
-    @pytest.mark.parametrize(
-        ("route_result", "route_converted"),
-        (
-            (billy, billy.model_dump()),
-            (lucy, lucy.model_dump()),
-            ((billy, lucy), {"items": (billy, lucy)}),
-            ([billy, lucy], {"items": [billy, lucy]}),
-            ({billy, lucy}, {"items": {billy, lucy}}),
-            ({"billy": billy, "lucy": lucy}, {"billy": billy, "lucy": lucy}),
-        ),
-    )
-    def test_unpack_methods(self, route_result: Any, route_converted: dict[str, Any]) -> None:
-        route_context = {"extra": "added"}
-
-        result = JinjaContext.unpack_result(route_result=route_result, route_context=route_context)
-        assert result == route_converted
-
-        result = JinjaContext.unpack_result_with_route_context(
-            route_result=route_result, route_context=route_context
-        )
-        assert result == {**route_context, **route_converted}
-
-    def test_unpack_result_with_route_context_conflict(self) -> None:
-        with pytest.raises(ValueError):
-            JinjaContext.unpack_result_with_route_context(
-                route_result=billy, route_context={"name": "Not Billy"}
-            )
-
-    def test_use_converters(self) -> None:
-        context_factory = JinjaContext.use_converters(
-            lambda _: {"route_result": 1},
-            lambda _: {"route_context": 2},
-        )
-        assert context_factory(route_result=None, route_context={}) == {
-            "route_result": 1,
-            "route_context": 2,
-        }
-
-    def test_use_converters_name_conflict(self) -> None:
-        context_factory = JinjaContext.use_converters(
-            lambda _: {"x": 1},
-            lambda _: {"x": 2},
-        )
-        with pytest.raises(ValueError):
-            context_factory(route_result=None, route_context={})
-
-    def test_wrap_as(self) -> None:
-        result_only = JinjaContext.wrap_as("item")
-        assert result_only is JinjaContext.wrap_as("item")
-
-        result_and_context = JinjaContext.wrap_as("item", "route")
-        route_result, route_context = 22, {"4": 4}
-
-        assert {"item": route_result} == result_only(route_result=route_result, route_context=route_context)
-        assert {"item": route_result, "route": route_context} == result_and_context(
-            route_result=route_result, route_context=route_context
-        )
-
-    def test_wrap_as_name_conflict(self) -> None:
-        with pytest.raises(ValueError):
-            JinjaContext.wrap_as("foo", "foo")
