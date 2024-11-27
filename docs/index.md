@@ -33,7 +33,7 @@ $ pip install fasthx
 The package has optional dependencies for the following **official integrations**:
 
 - [htmy](https://volfpeter.github.io/htmy/): `pip install fasthx[htmy]`.
-- [jinja][https://jinja.palletsprojects.com/en/stable/]: `pip install fasthx[jinja]`.
+- [jinja](https://jinja.palletsprojects.com/en/stable/): `pip install fasthx[jinja]`.
 
 ## Dependencies
 
