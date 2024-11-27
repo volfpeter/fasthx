@@ -93,7 +93,7 @@ from fasthx import hx, page
 app = FastAPI()
 
 # Create a dependecy to see that its return value is available in the render function.
-def get_random_number() -> int:
+async def get_random_number() -> int:
     return 4  # Chosen by fair dice roll.
 
 DependsRandomNumber = Annotated[int, Depends(get_random_number)]
@@ -101,10 +101,10 @@ DependsRandomNumber = Annotated[int, Depends(get_random_number)]
 # Create the render methods: they must always have these three arguments.
 # If you're using static type checkers, the type hint of `result` must match
 # the return type annotation of the route on which this render method is used.
-def render_index(result: list[dict[str, str]], *, context: dict[str, Any], request: Request) -> str:
+async def render_index(result: list[dict[str, str]], *, context: dict[str, Any], request: Request) -> str:
     return "<h1>Hello FastHX</h1>"
 
-def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], request: Request) -> str:
+async def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], request: Request) -> str:
     # The value of the `DependsRandomNumber` dependency is accessible with the same name as in the route.
     random_number = context["random_number"]
     lucky_number = f"<h1>{random_number}</h1>"
@@ -113,12 +113,12 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
 
 @app.get("/")
 @page(render_index)
-def index() -> None:
+async def index() -> None:
     ...
 
 @app.get("/htmx-or-data")
 @hx(render_user_list)
-def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
+async def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
 
 @app.get("/htmx-only")
