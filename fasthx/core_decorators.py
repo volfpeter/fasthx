@@ -113,6 +113,9 @@ def page(
                 result = e  # type: ignore[assignment]
                 renderer = render_error  # type: ignore[assignment]
 
+            if isinstance(result, Response):
+                return result
+
             response = get_response(kwargs)
             rendered = await execute_maybe_sync_func(
                 renderer, result, context=kwargs, request=__page_request
