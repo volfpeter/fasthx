@@ -75,9 +75,9 @@ def htmy_app() -> FastAPI:  # noqa: C901
     def header_with_no_default() -> User:
         return billy
 
-    @app.get("/error")  # type: ignore[arg-type]
+    @app.get("/error")
     @app.get("/error/{kind}")
-    @htmy.hx(
+    @htmy.hx(  # type: ignore[arg-type]
         ComponentHeader("X-Component", {}),  # No rendering if there's no exception.
         error_component_selector=ComponentHeader(
             "X-Error-Component",
@@ -94,9 +94,9 @@ def htmy_app() -> FastAPI:  # noqa: C901
 
         raise RenderedError({"a": 1, "b": 2}, response=response)
 
-    @app.get("/error-page")  # type: ignore[arg-type]
+    @app.get("/error-page")
     @app.get("/error-page/{kind}")
-    @htmy.page(
+    @htmy.page(  # type: ignore[arg-type]
         ComponentHeader("X-Component", {}),  # No rendering if there's no exception.
         error_component_selector=ComponentHeader(
             "X-Error-Component",

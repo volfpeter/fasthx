@@ -60,13 +60,13 @@ def hx_app() -> FastAPI:  # noqa: C901
     # There's a strange mypy issue here, it finds errors for the routes that defined later,
     # regardless of the order. It seems it fails to resolve and match generic types.
 
-    @app.get("/htmx-only")  # type: ignore
-    @hx(async_render_user_list, no_data=True)
+    @app.get("/htmx-only")
+    @hx(async_render_user_list, no_data=True)  # type: ignore[arg-type]
     async def htmx_only(random_number: DependsRandomNumber) -> list[User]:
         return users
 
-    @app.get("/error/{kind}")  # type: ignore
-    @hx(render_user_list, render_error=render_data_error)
+    @app.get("/error/{kind}")
+    @hx(render_user_list, render_error=render_data_error)  # type: ignore[arg-type]
     def error_in_route(kind: str, response: Response) -> list[User]:
         if kind == "data":
             raise DataError("test-message", response)
@@ -75,8 +75,8 @@ def hx_app() -> FastAPI:  # noqa: C901
 
         return users
 
-    @app.get("/error-no-data/{kind}")  # type: ignore
-    @hx(render_user_list, render_error=render_data_error, no_data=True)
+    @app.get("/error-no-data/{kind}")
+    @hx(render_user_list, render_error=render_data_error, no_data=True)  # type: ignore[arg-type]
     def error_in_route_no_data(kind: str, response: Response) -> list[User]:
         if kind == "data":
             raise DataError("test-message", response)
@@ -85,8 +85,8 @@ def hx_app() -> FastAPI:  # noqa: C901
 
         return users
 
-    @app.get("/error-page/{kind}")  # type: ignore
-    @page(render_user_list, render_error=render_data_error)
+    @app.get("/error-page/{kind}")
+    @page(render_user_list, render_error=render_data_error)  # type: ignore[arg-type]
     def error_in_route_page(kind: str, response: Response) -> list[User]:
         if kind == "data":
             raise DataError("test-message", response)

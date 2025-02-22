@@ -32,9 +32,9 @@ def hx(
     """
 
     def decorator(func: MaybeAsyncFunc[P, T]) -> Callable[P, Coroutine[None, None, T | Response]]:
-        @wraps(func)  # type: ignore[arg-type]
+        @wraps(func)
         async def wrapper(
-            *args: P.args, __hx_request: DependsHXRequest, **kwargs: P.kwargs
+            __hx_request: DependsHXRequest, *args: P.args, **kwargs: P.kwargs
         ) -> T | Response:
             if no_data and __hx_request is None:
                 raise HTTPException(
@@ -99,9 +99,9 @@ def page(
     """
 
     def decorator(func: MaybeAsyncFunc[P, T]) -> Callable[P, Coroutine[None, None, Response]]:
-        @wraps(func)  # type: ignore[arg-type]
+        @wraps(func)
         async def wrapper(
-            *args: P.args, __page_request: DependsPageRequest, **kwargs: P.kwargs
+            __page_request: DependsPageRequest, *args: P.args, **kwargs: P.kwargs
         ) -> T | Response:
             try:
                 result = await execute_maybe_sync_func(func, *args, **kwargs)

@@ -79,7 +79,7 @@ class UserOverview:
             user_list,
             # -- HTMX directives.
             hx_trigger="load delay:1000",
-            hx_get=f"/users?rerenders={rerenders+1}",
+            hx_get=f"/users?rerenders={rerenders + 1}",
             hx_swap="outerHTML",
             # Send the next component variant in an X-Component header.
             hx_headers=f'{{"X-Component": "{next_variant}"}}',

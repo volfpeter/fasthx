@@ -33,14 +33,14 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
 
 # Note on the type ignore: it seems mypy generic resolution fails at
 # fastapi==0.111.0, at least on the first mypy run when there's no cache.
-@app.get("/", response_model=None, include_in_schema=False)  # type: ignore[arg-type,unused-ignore]
+@app.get("/", response_model=None, include_in_schema=False)
 @page(render_index)
 def index() -> None: ...
 
 
 # Note on the type ignore: it seems mypy generic resolution fails at
 # fastapi==0.111.0, at least on the first mypy run when there's no cache.
-@app.get("/htmx-or-data")  # type: ignore[arg-type,unused-ignore]
+@app.get("/htmx-or-data")
 @hx(render_user_list)
 def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[dict[str, str]]:
     response.headers["my-response-header"] = "works"
@@ -49,7 +49,7 @@ def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list
 
 # Note on the type ignore: it seems mypy generic resolution fails at
 # fastapi==0.111.0, at least on the first mypy run when there's no cache.
-@app.get("/htmx-only", include_in_schema=False)  # type: ignore[arg-type,unused-ignore]
+@app.get("/htmx-only", include_in_schema=False)
 @hx(render_user_list, no_data=True)
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
