@@ -22,6 +22,10 @@ Key features:
 - **Correct typing** makes it possible to apply other (typed) decorators to your routes.
 - Works with both **sync** and **async routes**.
 
+## Support
+
+Consider supporting the development and maintenance of the project through [sponsoring](https://buymeacoffee.com/volfpeter), or reach out for [consulting](https://www.volfp.com/contact?subject=Consulting%20-%20FastHX) so you can get the most out of the library.
+
 ## Installation
 
 The package is available on PyPI and can be installed with:
@@ -47,11 +51,13 @@ The documentation is built with `mkdocs-material` and `mkdocstrings`.
 
 ## Contributing
 
-Feel free to ask questions or request new features.
+We welcome contributions from the community to help improve the project! Whether you're an experienced developer or just starting out, there are many ways you can contribute:
 
-And of course all contributions are welcome, including more documentation, examples, code, and tests.
-
-The goal is to make `fasthx` a well-rounded project that makes even your most complex HTMX use-cases easy to implement.
+- **Discuss**: Join our [Discussion Board](https://github.com/volfpeter/fasthx/discussions) to ask questions, share ideas, provide feedback, and engage with the community.
+- **Document**: Help improve the documentation by fixing typos, adding examples, and updating guides to make it easier for others to use the project.
+- **Develop**: Prototype requested features or pick up issues from the issue tracker.
+- **Share**: Share you own project by adding it to the [External examples](#external-examples) section, helping others discover and benefit from your work.
+- **Test**: Write tests to improve coverage and enhance reliability.
 
 ## License - MIT
 
