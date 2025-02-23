@@ -11,7 +11,7 @@
 
 FastAPI server-side rendering with built-in HTMX support.
 
-Key features:
+## Key features
 
 - **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
 - Built for **HTMX**, but can be used without it.
@@ -216,7 +216,7 @@ We welcome contributions from the community to help improve the project! Whether
 - **Discuss**: Join our [Discussion Board](https://github.com/volfpeter/fasthx/discussions) to ask questions, share ideas, provide feedback, and engage with the community.
 - **Document**: Help improve the documentation by fixing typos, adding examples, and updating guides to make it easier for others to use the project.
 - **Develop**: Prototype requested features or pick up issues from the issue tracker.
-- **Share**: Share you own project by adding it to the external examples list, helping others discover and benefit from your work.
+- **Share**: Share your own project by adding it to the external examples list, helping others discover and benefit from your work.
 - **Test**: Write tests to improve coverage and enhance reliability.
 
 ## License - MIT
