@@ -119,7 +119,7 @@ def htmy_app() -> FastAPI:  # noqa: C901
         return []
 
     @app.get("/render-component")
-    async def render_component(request: Request) -> str:
+    async def render_component(request: Request) -> HTMLResponse:
         return HTMLResponse(await htmy.render_component(UserListItem(billy), request))
 
     return app
