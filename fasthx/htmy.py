@@ -177,8 +177,30 @@ class HTMY:
             else self._make_error_render_function(error_component_selector),
         )
 
+    async def render_component(self, component: h.Component, request: Request) -> str:
+        """
+        Renders the given component.
+
+        This method is useful for rendering components directly, outside of the context of a route
+        (meaning no access to route parameters), for example in exception handlers.
+
+        The method adds all the usual data to the `htmy` rendering context, including the result of
+        all request processors. There is no access to route parameters though, so while `RouteParams`
+        will be in the context, it will be empty.
+
+        Arguments:
+            component: The component to render.
+            request: The current request.
+
+        Returns:
+            The rendered component.
+        """
+        return await self.htmy.render(component, self._make_render_context(request, {}))
+
     def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> HTMLRenderer[T]:
-        """Creates a render function that uses the given component selector."""
+        """
+        Creates a render function that uses the given component selector.
+        """
 
         async def render(result: T, *, context: dict[str, Any], request: Request) -> str:
             component = (
@@ -193,7 +215,9 @@ class HTMY:
     def _make_error_render_function(
         self, component_selector: HTMYComponentSelector[Exception]
     ) -> HTMLRenderer[Exception]:
-        """Creates an error renderer function that uses the given component selector."""
+        """
+        Creates an error renderer function that uses the given component selector.
+        """
 
         async def render(result: Exception, *, context: dict[str, Any], request: Request) -> str:
             component = (
@@ -206,7 +230,16 @@ class HTMY:
         return render
 
     def _make_render_context(self, request: Request, route_params: dict[str, Any]) -> h.Context:
-        """Creates the HTMY rendering context."""
+        """
+        Creates the `htmy` rendering context for the given request and route parameters.
+
+        Arguments:
+            request: The current request.
+            route_params: The route parameters.
+
+        Returns:
+            The `htmy` rendering context.
+        """
         # Add the current request to the context.
         result = CurrentRequest.to_context(request)
 

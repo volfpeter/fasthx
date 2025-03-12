@@ -1,5 +1,6 @@
 import pytest
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from fasthx.htmy import HTMY, ComponentHeader
@@ -14,7 +15,7 @@ from .data import (
     users,
 )
 from .errors import RenderedError
-from .htmy_components import HelloWorld, Profile, RequestProcessors, UserList
+from .htmy_components import HelloWorld, Profile, RequestProcessors, UserList, UserListItem
 
 billy_html_header = "<h1 >Billy Shears (active=True)</h1>"
 billy_html_paragraph = "<p >Billy Shears (active=True)</p>"
@@ -117,6 +118,10 @@ def htmy_app() -> FastAPI:  # noqa: C901
     def global_no_data() -> list[User]:
         return []
 
+    @app.get("/render-component")
+    async def render_component(request: Request) -> str:
+        return HTMLResponse(await htmy.render_component(UserListItem(billy), request))
+
     return app
 
 
@@ -191,6 +196,8 @@ def htmy_client(htmy_app: FastAPI) -> TestClient:
         ("/error-page/value-error", None, 500, "None", {}),
         # Globally disabled data responses
         ("/global-no-data", None, 400, "", {}),
+        # Direct component rendering
+        ("/render-component", None, 200, "<li >Billy Shears (active=True)</li>", {}),
     ),
 )
 def test_htmy(
