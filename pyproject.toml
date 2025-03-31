@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "2.3.0"
+version = "2.3.1"
 description = "FastAPI server-side rendering with built-in HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
@@ -9,8 +9,8 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = ">=0.100.0"
-htmy = {version = ">=0.5.0", optional = true}
-jinja2 = {version = "^3.0.0", optional = true}
+htmy = { version = ">=0.5.0", optional = true }
+jinja2 = { version = "^3.0.0", optional = true }
 
 [tool.poetry.extras]
 htmy = ["htmy"]
@@ -21,7 +21,7 @@ htmy = ">=0.5.0"
 httpx = "^0.26.0"
 jinja2 = "^3.0.0"
 mkdocs-material = "^9.5.32"
-mkdocstrings = {extras = ["python"], version = "^0.25.2"}
+mkdocstrings = { extras = ["python"], version = "^0.25.2" }
 mypy = "^1.15.0"
 poethepoet = "^0.30.0"
 pytest = "^8.3.3"
@@ -50,17 +50,17 @@ exclude = [
     "docs",
 ]
 lint.select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "S",  # flake8-bandit - we must ignore these rules in tests
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "S", # flake8-bandit - we must ignore these rules in tests
+    "C", # flake8-comprehensions
+    "B", # flake8-bugbear
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*" = ["S101"]  # S101: use of assert detected
+"tests/**/*" = ["S101"] # S101: use of assert detected
 
 [tool.poe.tasks]
 check-format = "ruff format --check ."
