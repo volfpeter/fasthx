@@ -4,6 +4,7 @@ import pytest
 from fastapi import FastAPI, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.testclient import TestClient
+from pydantic import BaseModel, computed_field
 
 from fasthx import Jinja, JinjaContext, JinjaPath, TemplateHeader
 
@@ -282,3 +283,15 @@ class TestJinjaContext:
     def test_wrap_as_name_conflict(self) -> None:
         with pytest.raises(ValueError):
             JinjaContext.wrap_as("foo", "foo")
+
+    def test_unpack_pydantic_model_with_computed_fields(self) -> None:
+        class Model(BaseModel):
+            name: str
+
+            @computed_field  # type: ignore[prop-decorator]
+            @property
+            def random_number(self) -> int:
+                return 4
+
+        context = JinjaContext.unpack_object(Model(name="Eric"))
+        assert context == {"name": "Eric", "random_number": 4}
