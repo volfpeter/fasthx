@@ -26,7 +26,7 @@ mypy = "^1.15.0"
 poethepoet = "^0.30.0"
 pytest = "^8.3.3"
 pytest-random-order = "^1.1.1"
-ruff = "^0.9.0"
+ruff = "^0.11.2"
 typing-extensions = ">=4.5.0"
 uvicorn = "^0.32.0"
 
