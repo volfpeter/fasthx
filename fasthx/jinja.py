@@ -47,10 +47,11 @@ class JinjaContext:
         Conversion rules:
 
         - `dict`: returned as is.
-        - `Collection`: returned as `{"items": route_context}`, available in templates as `items`.
+        - `Collection`: returned as `{"items": obj}`, available in templates as `items`.
         - Objects with `__dict__` or `__slots__`: known keys are taken from `__dict__` or `__slots__`
           and the context will be created as `{key: getattr(route_result, key) for key in keys}`,
-          omitting property names starting with an underscore.
+          omitting property names starting with an underscore. For Pydantic models, computed
+          fields will also be included.
         - `None` is converted into an empty context.
 
         Raises:
@@ -69,6 +70,8 @@ class JinjaContext:
         if hasattr(obj, "__dict__"):
             # Covers Pydantic models and standard classes.
             object_keys = obj.__dict__.keys()
+            if hasattr(obj, "model_computed_fields"):  # Pydantic computed fields support.
+                object_keys = [*(() if object_keys is None else object_keys), *obj.model_computed_fields]
         elif hasattr(obj, "__slots__"):
             # Covers classes with with __slots__.
             object_keys = obj.__slots__
