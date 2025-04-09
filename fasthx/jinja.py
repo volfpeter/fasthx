@@ -70,8 +70,11 @@ class JinjaContext:
         if hasattr(obj, "__dict__"):
             # Covers Pydantic models and standard classes.
             object_keys = obj.__dict__.keys()
-            if hasattr(obj, "model_computed_fields"):  # Pydantic computed fields support.
-                object_keys = [*(() if object_keys is None else object_keys), *obj.model_computed_fields]
+            if hasattr(type(obj), "model_computed_fields"):  # Pydantic computed fields support.
+                object_keys = [
+                    *(() if object_keys is None else object_keys),
+                    *type(obj).model_computed_fields,
+                ]
         elif hasattr(obj, "__slots__"):
             # Covers classes with with __slots__.
             object_keys = obj.__slots__
