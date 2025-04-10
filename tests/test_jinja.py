@@ -1,3 +1,4 @@
+import warnings
 from typing import Any
 
 import pytest
@@ -293,5 +294,7 @@ class TestJinjaContext:
             def random_number(self) -> int:
                 return 4
 
-        context = JinjaContext.unpack_object(Model(name="Eric"))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            context = JinjaContext.unpack_object(Model(name="Eric"))
         assert context == {"name": "Eric", "random_number": 4}
