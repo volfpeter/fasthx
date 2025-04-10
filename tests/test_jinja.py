@@ -294,7 +294,9 @@ class TestJinjaContext:
             def random_number(self) -> int:
                 return 4
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             context = JinjaContext.unpack_object(Model(name="Eric"))
+            assert len(w) == 0
+
         assert context == {"name": "Eric", "random_number": 4}
