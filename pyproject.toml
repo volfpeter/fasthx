@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "2.3.1"
+version = "2.3.2"
 description = "FastAPI server-side rendering with built-in HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
