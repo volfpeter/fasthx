@@ -38,6 +38,10 @@ build-backend = "poetry.core.masonry.api"
 strict = true
 show_error_codes = true
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
 [tool.ruff]
 line-length = 108
 exclude = [
