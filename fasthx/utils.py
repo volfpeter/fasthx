@@ -27,7 +27,7 @@ def append_to_signature(func: Callable[P, T], *params: inspect.Parameter) -> Cal
     Returns:
         The received function with an extended `__signature__`.
     """
-    signature = inspect.signature(func)
+    signature = inspect.signature(func, eval_str=True)
     func.__signature__ = signature.replace(parameters=(*signature.parameters.values(), *params))  # type: ignore[attr-defined]
     return func
 

@@ -1,3 +1,5 @@
+from __future__ import annotations  # Tests https://github.com/volfpeter/fasthx/issues/68
+
 from typing import Any
 
 import pytest

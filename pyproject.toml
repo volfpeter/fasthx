@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fasthx"
-version = "2.3.2"
+version = "2.3.3"
 description = "FastAPI server-side rendering with built-in HTMX support."
 authors = ["Peter Volf <do.volfp@gmail.com>"]
 readme = "README.md"
@@ -37,6 +37,10 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 strict = true
 show_error_codes = true
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
 
 [tool.ruff]
 line-length = 108
