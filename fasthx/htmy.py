@@ -9,7 +9,7 @@ from fastapi import Request, Response
 
 from .component_selectors import ComponentHeader as _ComponentHeader
 from .core_decorators import hx, page
-from .typing import ComponentSelector, HTMLRenderer, MaybeAsyncFunc, P, RequestComponentSelector, T
+from .typing import ComponentSelector, MaybeAsyncFunc, P, RenderFunction, RequestComponentSelector, T
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -197,7 +197,7 @@ class HTMY:
         """
         return await self.htmy.render(component, self._make_render_context(request, {}))
 
-    def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> HTMLRenderer[T]:
+    def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> RenderFunction[T]:
         """
         Creates a render function that uses the given component selector.
         """
@@ -214,7 +214,7 @@ class HTMY:
 
     def _make_error_render_function(
         self, component_selector: HTMYComponentSelector[Exception]
-    ) -> HTMLRenderer[Exception]:
+    ) -> RenderFunction[Exception]:
         """
         Creates an error renderer function that uses the given component selector.
         """

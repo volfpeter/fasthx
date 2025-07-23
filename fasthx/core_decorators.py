@@ -7,15 +7,15 @@ from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse
 
 from .dependencies import DependsHXRequest, DependsPageRequest
-from .typing import HTMLRenderer, MaybeAsyncFunc, P, T
+from .typing import MaybeAsyncFunc, P, RenderFunction, T
 from .utils import append_to_signature, execute_maybe_sync_func, get_response
 
 
 def hx(
-    render: HTMLRenderer[T],
+    render: RenderFunction[T],
     *,
     no_data: bool = False,
-    render_error: HTMLRenderer[Exception] | None = None,
+    render_error: RenderFunction[Exception] | None = None,
 ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
     """
     Decorator that converts a FastAPI route's return value into HTML if the request was
@@ -85,9 +85,9 @@ def hx(
 
 
 def page(
-    render: HTMLRenderer[T],
+    render: RenderFunction[T],
     *,
-    render_error: HTMLRenderer[Exception] | None = None,
+    render_error: RenderFunction[Exception] | None = None,
 ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, Response]]]:
     """
     Decorator that converts a FastAPI route's return value into HTML.

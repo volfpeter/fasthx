@@ -11,8 +11,8 @@ Tcontra = TypeVar("Tcontra", contravariant=True)
 MaybeAsyncFunc: TypeAlias = Callable[P, T] | Callable[P, Coroutine[Any, Any, T]]
 
 
-class SyncHTMLRenderer(Protocol[Tcontra]):
-    """Sync HTML renderer definition."""
+class SyncRenderFunction(Protocol[Tcontra]):
+    """Sync render function definition."""
 
     def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> str | Response:
         """
@@ -22,13 +22,13 @@ class SyncHTMLRenderer(Protocol[Tcontra]):
             request: The request being served.
 
         Returns:
-            HTML string (it will be automatically converted to `HTMLResponse`) or a `Response` object.
+            The rendered string or a `Response` object.
         """
         ...
 
 
-class AsyncHTMLRenderer(Protocol[Tcontra]):
-    """Async HTML renderer definition."""
+class AsyncRenderFunction(Protocol[Tcontra]):
+    """Async render function definition."""
 
     async def __call__(
         self, result: Tcontra, *, context: dict[str, Any], request: Request
@@ -40,13 +40,13 @@ class AsyncHTMLRenderer(Protocol[Tcontra]):
             request: The request being served.
 
         Returns:
-            HTML string (it will be automatically converted to `HTMLResponse`) or a `Response` object.
+            The rendered string or a `Response` object.
         """
         ...
 
 
-HTMLRenderer: TypeAlias = SyncHTMLRenderer[Tcontra] | AsyncHTMLRenderer[Tcontra]
-"""Sync or async HTML renderer type."""
+RenderFunction: TypeAlias = SyncRenderFunction[Tcontra] | AsyncRenderFunction[Tcontra]
+"""Sync or async render function type."""
 
 
 @runtime_checkable

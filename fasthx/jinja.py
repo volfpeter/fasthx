@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from .component_selectors import ComponentHeader as _ComponentHeader
 from .core_decorators import hx, page
-from .typing import ComponentSelector, HTMLRenderer, MaybeAsyncFunc, P, RequestComponentSelector
+from .typing import ComponentSelector, MaybeAsyncFunc, P, RenderFunction, RequestComponentSelector
 
 
 class JinjaContextFactory(Protocol):
@@ -320,7 +320,7 @@ class Jinja:
         make_context: JinjaContextFactory,
         prefix: str | None,
         error_renderer: bool = False,
-    ) -> HTMLRenderer[Any]:
+    ) -> RenderFunction[Any]:
         """
         Creates an `HTMLRenderer` with the given configuration.
 
