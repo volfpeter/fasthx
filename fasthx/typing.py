@@ -8,7 +8,7 @@ T = TypeVar("T")
 Tco = TypeVar("Tco", covariant=True)
 Tcontra = TypeVar("Tcontra", contravariant=True)
 
-MaybeAsyncFunc = Callable[P, T] | Callable[P, Coroutine[Any, Any, T]]
+MaybeAsyncFunc: TypeAlias = Callable[P, T] | Callable[P, Coroutine[Any, Any, T]]
 
 
 class SyncHTMLRenderer(Protocol[Tcontra]):
@@ -45,29 +45,8 @@ class AsyncHTMLRenderer(Protocol[Tcontra]):
         ...
 
 
-HTMLRenderer = SyncHTMLRenderer[Tcontra] | AsyncHTMLRenderer[Tcontra]
+HTMLRenderer: TypeAlias = SyncHTMLRenderer[Tcontra] | AsyncHTMLRenderer[Tcontra]
 """Sync or async HTML renderer type."""
-
-
-class JinjaContextFactory(Protocol):
-    """
-    Protocol definition for methods that convert a FastAPI route's result and route context
-    (i.e. the route's arguments) into a Jinja context (`dict`).
-    """
-
-    def __call__(self, *, route_result: Any, route_context: dict[str, Any]) -> dict[str, Any]:
-        """
-        Arguments:
-            route_result: The result of the route.
-            route_context: Every keyword argument the route received.
-
-        Returns:
-            The Jinja context dictionary.
-
-        Raises:
-            ValueError: If converting the arguments to a Jinja context fails.
-        """
-        ...
 
 
 @runtime_checkable
@@ -106,4 +85,4 @@ class RequestComponentSelector(Protocol[Tco]):
 
 
 ComponentSelector: TypeAlias = T | RequestComponentSelector[T]
-"""Type alias for known component selectors."""
+"""Type alias for all types of component selectors."""

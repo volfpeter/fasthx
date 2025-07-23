@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, computed_field
 
-from fasthx import Jinja, JinjaContext, JinjaPath, TemplateHeader
+from fasthx.jinja import ComponentHeader, Jinja, JinjaContext, JinjaPath
 
 from .data import (
     DependsRandomNumber,
@@ -50,7 +50,7 @@ def jinja_app() -> FastAPI:  # noqa: C901
 
     @app.get("/htmx-or-data/{id}")
     @jinja.hx(
-        TemplateHeader(
+        ComponentHeader(
             "X-Component",
             {
                 "header": "h1.jinja",
@@ -66,7 +66,7 @@ def jinja_app() -> FastAPI:  # noqa: C901
 
     @app.get("/header-with-no-default")
     @jinja.hx(
-        TemplateHeader(
+        ComponentHeader(
             "X-Component",
             {
                 "header": "profile/h1.jinja",
@@ -81,8 +81,8 @@ def jinja_app() -> FastAPI:  # noqa: C901
     @app.get("/error")
     @app.get("/error/{kind}")
     @jinja.hx(
-        TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
-        error_template=TemplateHeader(
+        ComponentHeader("X-Component", {}),  # No rendering if there's no exception.
+        error_template=ComponentHeader(
             "X-Error-Component",
             {},
             default="hello-world.jinja",
@@ -100,8 +100,8 @@ def jinja_app() -> FastAPI:  # noqa: C901
     @app.get("/error-page")
     @app.get("/error-page/{kind}")
     @jinja.page(
-        TemplateHeader("X-Component", {}),  # No rendering if there's no exception.
-        error_template=TemplateHeader(
+        ComponentHeader("X-Component", {}),  # No rendering if there's no exception.
+        error_template=ComponentHeader(
             "X-Error-Component",
             {},
             default="hello-world.jinja",

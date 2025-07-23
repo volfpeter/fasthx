@@ -23,7 +23,7 @@ HTMYComponentSelector: TypeAlias = ComponentSelector[HTMYComponentFactory[T]]
 
 class ComponentHeader(_ComponentHeader[HTMYComponentFactory[T]]):
     """
-    `RequestComponentSelector` for HTMY components that takes selects the rendered component
+    `RequestComponentSelector` for HTMY components that selects the rendered component
     based on a request header.
     """
 
