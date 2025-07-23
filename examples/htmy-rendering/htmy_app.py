@@ -1,6 +1,7 @@
 import random
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 from fastapi import FastAPI
 from htmy import Component, Context, html
@@ -21,18 +22,13 @@ class User(BaseModel):
 # -- HTMY components
 
 
-@dataclass
-class UserListItem:
-    """User list item component."""
-
-    user: User
-
-    def htmy(self, context: Context) -> Component:
-        return html.li(
-            html.span(self.user.name, class_="font-semibold"),
-            html.em(f" (born {self.user.birthday.isoformat()})"),
-            class_="text-lg",
-        )
+def user_list_item(user: User) -> html.li:
+    """User list item component factory."""
+    return html.li(
+        html.span(user.name, class_="font-semibold"),
+        html.em(f" (born {user.birthday.isoformat()})"),
+        class_="text-lg",
+    )
 
 
 @dataclass
@@ -57,7 +53,7 @@ class UserOverview:
         rerenders: int = route_params["rerenders"]
 
         # Create the user list item generator.
-        user_list_items = (UserListItem(u) for u in self.users)
+        user_list_items = (user_list_item(u) for u in self.users)
 
         # Create the ordered or unordered user list.
         user_list = (
@@ -88,34 +84,30 @@ class UserOverview:
         )
 
 
-@dataclass
-class IndexPage:
-    """Index page with TailwindCSS styling."""
-
-    def htmy(self, context: Context) -> Component:
-        return (
-            html.DOCTYPE.html,
-            html.html(
-                html.head(
-                    # Some metadata
-                    html.title("FastHX + HTMY example"),
-                    html.meta.charset(),
-                    html.meta.viewport(),
-                    # TailwindCSS
-                    html.script(src="https://cdn.tailwindcss.com"),
-                    # HTMX
-                    html.script(src="https://unpkg.com/htmx.org@2.0.2"),
-                ),
-                html.body(
-                    # Page content: lazy-loaded user list.
-                    html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"),
-                    class_=(
-                        "h-screen w-screen flex flex-col items-center justify-center "
-                        " gap-4 bg-slate-800 text-white"
-                    ),
+def index_page(_: Any) -> Component:
+    return (
+        html.DOCTYPE.html,
+        html.html(
+            html.head(
+                # Some metadata
+                html.title("FastHX + HTMY example"),
+                html.meta.charset(),
+                html.meta.viewport(),
+                # TailwindCSS
+                html.script(src="https://cdn.tailwindcss.com"),
+                # HTMX
+                html.script(src="https://unpkg.com/htmx.org@2.0.2"),
+            ),
+            html.body(
+                # Page content: lazy-loaded user list.
+                html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"),
+                class_=(
+                    "h-screen w-screen flex flex-col items-center justify-center "
+                    " gap-4 bg-slate-800 text-white"
                 ),
             ),
-        )
+        ),
+    )
 
 
 # -- Application
@@ -133,7 +125,7 @@ htmy = HTMY(
 
 
 @app.get("/")
-@htmy.page(lambda _: IndexPage())
+@htmy.page(index_page)
 def index() -> None:
     """The index page of the application."""
     ...
