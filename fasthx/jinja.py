@@ -217,7 +217,7 @@ class JinjaContext:
 
 class ComponentHeader(_ComponentHeader[str]):
     """
-    `RequestComponentSelector` for HTMY components that selects the rendered component
+    `RequestComponentSelector` for Jinja templates that selects the rendered template
     based on a request header.
     """
 
