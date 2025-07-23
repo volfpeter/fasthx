@@ -97,12 +97,12 @@ def index() -> None: ...
 
 Requires: `pip install fasthx[jinja]`.
 
-To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
+To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.jinja.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
 ```python
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
-from fasthx import Jinja
+from fasthx.jinja import Jinja
 from pydantic import BaseModel
 
 # Pydantic model of the data the example API is using.
