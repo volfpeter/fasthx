@@ -2,12 +2,12 @@
 
 ## Basics
 
-To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML, saving you some boilerplate code. See the example code below:
+To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.jinja.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML, saving you some boilerplate code. See the example code below:
 
 ```python
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
-from fasthx import Jinja
+from fasthx.jinja import ComponentHeader, Jinja
 from pydantic import BaseModel
 
 # Pydantic model of the data the example API is using.
@@ -43,10 +43,9 @@ def htmx_only() -> list[User]:
     return [User(first_name="Billy", last_name="Shears")]
 ```
 
-## Using `TemplateHeader`
+## Using `ComponentHeader`
 
-In the basic example, routes always rendered a fixed HTML template. `TemplateHeader` lifts this restriction by letting the client submit the _key_ of the required template,
-automatically looking up the corresponding template, and of course rendering it.
+In the basic example, routes always rendered a fixed HTML template. `ComponentHeader` lifts this restriction by letting the client submit the _key_ of the required template, automatically looking up the corresponding template, and of course rendering it.
 
 This can be particularly helpful when multiple templates/UI components require the same data and business logic.
 
@@ -56,7 +55,7 @@ jinja = Jinja(Jinja2Templates("templates"))
 
 @app.get("/profile/{id}")
 @jinja.hx(
-    TemplateHeader(
+    ComponentHeader(
         "X-Component",
         {
             "card": "profile/card.jinja",
