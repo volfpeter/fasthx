@@ -8,7 +8,7 @@ from fasthx import hx, page
 app = FastAPI()
 
 
-# Create a dependecy to see that its return value is available in the render function.
+# Create a dependency to see that its return value is available in the render function.
 def get_random_number() -> int:
     return 4  # Chosen by fair dice roll.
 
@@ -31,15 +31,11 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
     return f"{lucky_number}\n{users}"
 
 
-# Note on the type ignore: it seems mypy generic resolution fails at
-# fastapi==0.111.0, at least on the first mypy run when there's no cache.
 @app.get("/", response_model=None, include_in_schema=False)
 @page(render_index)
 def index() -> None: ...
 
 
-# Note on the type ignore: it seems mypy generic resolution fails at
-# fastapi==0.111.0, at least on the first mypy run when there's no cache.
 @app.get("/htmx-or-data")
 @hx(render_user_list)
 def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list[dict[str, str]]:
@@ -47,8 +43,6 @@ def htmx_or_data(random_number: DependsRandomNumber, response: Response) -> list
     return [{"name": "Joe"}]
 
 
-# Note on the type ignore: it seems mypy generic resolution fails at
-# fastapi==0.111.0, at least on the first mypy run when there's no cache.
 @app.get("/htmx-only", include_in_schema=False)
 @hx(render_user_list, no_data=True)
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:

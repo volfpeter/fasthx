@@ -43,7 +43,7 @@ The package has optional dependencies for the following **official integrations*
 
 The core concept of FastHX is to let FastAPI routes do their usual job of handling the business logic and returning the result, while the FastHX decorators take care of the entire rendering / presentation layer using a declarative, decorator-based approach.
 
-Interally, FastHX decorators always have access to the decorated route's result, all of its arguments (sometimes called the request context), and the current request. Integrations convert these values into data that can be consumed by the used rendering engine (for example `htmy` or `jinja`), run the rendering engine with the selected component (more on this below) and the created data, and return the result to the client. For more details on how data conversion works and how it can be customized, please see the API documentation of the rendering engine integration of your choice.
+Internally, FastHX decorators always have access to the decorated route's result, all of its arguments (sometimes called the request context), and the current request. Integrations convert these values into data that can be consumed by the used rendering engine (for example `htmy` or `jinja`), run the rendering engine with the selected component (more on this below) and the created data, and return the result to the client. For more details on how data conversion works and how it can be customized, please see the API documentation of the rendering engine integration of your choice.
 
 The `ComponentSelector` abstraction makes it possible to declaratively specify and dynamically select the component that should be used to render the response to a given request. It is also possible to define an "error" `ComponentSelector` that is used if the decorated route raises an exception -- a typical use-case being error rendering for incorrect user input.
 
@@ -157,7 +157,7 @@ from fasthx import hx, page
 # Create the app.
 app = FastAPI()
 
-# Create a dependecy to see that its return value is available in the render function.
+# Create a dependency to see that its return value is available in the render function.
 def get_random_number() -> int:
     return 4  # Chosen by fair dice roll.
 

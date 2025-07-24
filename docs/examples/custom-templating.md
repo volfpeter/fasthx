@@ -11,7 +11,7 @@ from fasthx import hx, page
 # Create the app.
 app = FastAPI()
 
-# Create a dependecy to see that its return value is available in the render function.
+# Create a dependency to see that its return value is available in the render function.
 def get_random_number() -> int:
     return 4  # Chosen by fair dice roll.
 
