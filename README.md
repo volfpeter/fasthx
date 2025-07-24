@@ -144,7 +144,7 @@ See the full working example [here](https://github.com/volfpeter/fasthx/tree/mai
 
 Requires: `pip install fasthx`.
 
-If you would like to use a rendering engine without FastHX integration, you can easily build on the `hx()` and `page()` decorators which give you all the functionality you will need. All you need to do is implement the `HTMLRenderer` protocol.
+If you would like to use a rendering engine without FastHX integration, you can easily build on the `hx()` and `page()` decorators which give you all the functionality you will need. All you need to do is implement the `RenderFunction` protocol.
 
 Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 

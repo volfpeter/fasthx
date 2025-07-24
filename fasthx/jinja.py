@@ -322,7 +322,7 @@ class Jinja:
         error_renderer: bool = False,
     ) -> RenderFunction[Any]:
         """
-        Creates an `HTMLRenderer` with the given configuration.
+        Creates a `RenderFunction` with the given configuration.
 
         Arguments:
             template: The template the renderer function should use.

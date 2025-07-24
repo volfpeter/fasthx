@@ -1,6 +1,6 @@
 # Custom Templating
 
-If you're not into Jinja templating, the `hx()` and `page()` decorators give you all the flexibility you need: you can integrate any HTML rendering or templating engine into `fasthx` simply by implementing the `HTMLRenderer` protocol. Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
+If you're not into Jinja templating, the `hx()` and `page()` decorators give you all the flexibility you need: you can integrate any HTML rendering or templating engine into `fasthx` simply by implementing the `RenderFunction` protocol. Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
 ```python
 from typing import Annotated, Any
