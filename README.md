@@ -22,6 +22,12 @@ FastAPI server-side rendering with built-in HTMX support.
 - **Correct typing** makes it possible to apply other (typed) decorators to your routes.
 - Works with both **sync** and **async routes**.
 
+## Opinions
+
+- "Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77))
+- "One of the main parts of the `FastAPI` -> `fasthx` -> `htmy` integration I'm falling in love with is its explicitness, and not too much magic happening." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+- "Thank you for your work on `htmy` and `fasthx`, both have been very pleasant to use, and the APIs are both intuitive and simple. Great work." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+
 ## Support
 
 Consider supporting the development and maintenance of the project through [sponsoring](https://buymeacoffee.com/volfpeter), or reach out for [consulting](https://www.volfp.com/contact?subject=Consulting%20-%20FastHX) so you can get the most out of the library.
