@@ -24,9 +24,11 @@ FastAPI server-side rendering with built-in HTMX support.
 
 ## Testimonials
 
-- "Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77))
-- "One of the main parts of the `FastAPI` -> `fasthx` -> `htmy` integration I'm falling in love with is its explicitness, and not too much magic happening." ([ref](https://github.com/volfpeter/fasthx/issues/54))
-- "Thank you for your work on `htmy` and `fasthx`, both have been very pleasant to use, and the APIs are both intuitive and simple. Great work." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+"Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77))
+
+"One of the main parts of the `FastAPI` -> `fasthx` -> `htmy` integration I'm falling in love with is its explicitness, and not too much magic happening." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+
+"Thank you for your work on `htmy` and `fasthx`, both have been very pleasant to use, and the APIs are both intuitive and simple. Great work." ([ref](https://github.com/volfpeter/fasthx/issues/54))
 
 ## Support
 
