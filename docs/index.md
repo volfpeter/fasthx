@@ -22,7 +22,7 @@ FastAPI server-side rendering with built-in HTMX support.
 - **Correct typing** makes it possible to apply other (typed) decorators to your routes.
 - Works with both **sync** and **async routes**.
 
-## Opinions
+## Testimonials
 
 - "Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77))
 - "One of the main parts of the `FastAPI` -> `fasthx` -> `htmy` integration I'm falling in love with is its explicitness, and not too much magic happening." ([ref](https://github.com/volfpeter/fasthx/issues/54))
@@ -47,7 +47,7 @@ The package has optional dependencies for the following **official integrations*
 
 ## Core concepts
 
-The core concept of FastHX is to let FastAPI routes do their usual job of handling the business logic and returning the result, while the FastHX decorators take care of the entire rendering / presentation layer using a declarative, decorator-based approach.
+The core concept of FastHX is to let FastAPI routes do their usual job of handling the business logic and returning the result, while the FastHX decorators take care of the entire rendering and presentation layer using a declarative, decorator-based approach.
 
 Internally, FastHX decorators always have access to the decorated route's result, all of its arguments (sometimes called the request context), and the current request. Integrations convert these values into data that can be consumed by the used rendering engine (for example `htmy` or `jinja`), run the rendering engine with the selected component (more on this below) and the created data, and return the result to the client. For more details on how data conversion works and how it can be customized, please see the API documentation of the rendering engine integration of your choice.
 
