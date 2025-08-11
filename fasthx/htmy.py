@@ -112,10 +112,10 @@ class HTMY:
     - All route parameters (as a `RouteParams` instance) that can be retrieved with
       `RouteParams.from_context()` in components.
     - Everything added through `self.request_processors`.
-    - The default context of `self.htmy`.
+    - The default context of `self.renderer`.
     """
 
-    htmy: h.Renderer = field(default_factory=h.Renderer)
+    renderer: h.Renderer = field(default_factory=h.Renderer)
     """The HTMY renderer to use."""
 
     no_data: bool = field(default=False, kw_only=True)
@@ -129,7 +129,7 @@ class HTMY:
     request_processors: list[RequestProcessor] = field(default_factory=list, kw_only=True)
     """
     A list of functions that expect the current request and return an `htmy` `Context` that should
-    be used during rendering in addition to the default context of `self.htmy`.
+    be used during rendering in addition to the default context of `self.renderer`.
     """
 
     def hx(
@@ -195,7 +195,7 @@ class HTMY:
         Returns:
             The rendered component.
         """
-        return await self.htmy.render(component, self._make_render_context(request, {}))
+        return await self.renderer.render(component, self._make_render_context(request, {}))
 
     def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> RenderFunction[T]:
         """
@@ -208,7 +208,9 @@ class HTMY:
                 if isinstance(component_selector, RequestComponentSelector)
                 else component_selector
             )
-            return await self.htmy.render(component(result), self._make_render_context(request, context))
+            return await self.renderer.render(
+                component(result), self._make_render_context(request, context)
+            )
 
         return render
 
@@ -225,7 +227,9 @@ class HTMY:
                 if isinstance(component_selector, RequestComponentSelector)
                 else component_selector
             )
-            return await self.htmy.render(component(result), self._make_render_context(request, context))
+            return await self.renderer.render(
+                component(result), self._make_render_context(request, context)
+            )
 
         return render
 
