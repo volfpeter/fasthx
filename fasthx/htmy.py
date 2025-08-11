@@ -46,7 +46,7 @@ class CurrentRequest:
         Loads the current `Request` instance from the given context.
 
         Raises:
-            KeyError: If the there's no `Request` in the context.
+            KeyError: If there is no `Request` in the context.
             TypeError: If invalid data is stored for `Request`.
         """
         result = context[Request]
