@@ -115,7 +115,7 @@ class HTMY:
     - The default context of `self.renderer`.
     """
 
-    renderer: h.Renderer = field(default_factory=h.Renderer)
+    renderer: h.RendererType = field(default_factory=h.Renderer)
     """The HTMY renderer to use."""
 
     no_data: bool = field(default=False, kw_only=True)
