@@ -98,7 +98,7 @@ def page(
         @wraps(func)
         async def wrapper(
             __page_request: DependsPageRequest, *args: P.args, **kwargs: P.kwargs
-        ) -> T | Response:
+        ) -> Response:
             try:
                 result = await execute_maybe_sync_func(func, *args, **kwargs)
                 renderer = render
@@ -116,17 +116,14 @@ def page(
             rendered = await execute_maybe_sync_func(
                 renderer, result, context=kwargs, request=__page_request
             )
-            return (
-                HTMLResponse(
-                    rendered,
-                    # The default status code of the FastAPI Response dependency is None
-                    # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
-                    background=getattr(response, "background", None),
-                )
-                if isinstance(rendered, str)
-                else rendered
+
+            return HTMLResponse(
+                rendered,
+                # The default status code of the FastAPI Response dependency is None
+                # (not allowed by the typing but required for FastAPI).
+                status_code=getattr(response, "status_code", 200) or 200,
+                headers=getattr(response, "headers", None),
+                background=getattr(response, "background", None),
             )
 
         return append_to_signature(
