@@ -42,6 +42,9 @@ show_error_codes = true
 venvPath = "."
 venv = ".venv"
 
+[tool.pytest.ini_options]
+addopts = "--random-order"
+
 [tool.ruff]
 line-length = 108
 exclude = [
@@ -67,12 +70,17 @@ lint.select = [
 "tests/**/*" = ["S101"] # S101: use of assert detected
 
 [tool.poe.tasks]
-check-format = "ruff format --check ."
-format = "ruff format ."
+format = "ruff format --check ."
+format-fix = "ruff format ."
+
 lint = "ruff check ."
 lint-fix = "ruff . --fix"
+
 mypy = "mypy ."
-test = "python -m pytest tests --random-order"
-static-checks.sequence = ["lint", "check-format", "mypy"]
-static-checks.ignore_fail = "return_non_zero"
+
+check.sequence = ["format", "lint", "mypy"]
+check.ignore_fail = "return_non_zero"
+
+test = "python -m pytest tests"
+
 serve-docs = "mkdocs serve"
