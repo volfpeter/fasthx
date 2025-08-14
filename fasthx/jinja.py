@@ -191,7 +191,7 @@ class JinjaContext:
         Arguments:
             result_key: The key by which the `route_result` should be accessible in templates.
                 See `JinjaContextFactory` for `route_result` details.
-            context_key: The key by whih the `route_context` should be accessible in templates.
+            context_key: The key by which the `route_context` should be accessible in templates.
                 If `None` (the default), then the `route_context` will not be accessible.
                 See `JinjaContextFactory` for `route_context` details.
 
