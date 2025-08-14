@@ -1,7 +1,7 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, ParamSpec, Protocol, TypeAlias, TypeVar, runtime_checkable
 
-from fastapi import Request, Response
+from fastapi import Request
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -14,7 +14,7 @@ MaybeAsyncFunc: TypeAlias = Callable[P, T] | Callable[P, Coroutine[Any, Any, T]]
 class SyncRenderFunction(Protocol[Tcontra]):
     """Sync render function definition."""
 
-    def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> str | Response:
+    def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> str:
         """
         Arguments:
             result: The result of the route the renderer is used on.
@@ -22,7 +22,7 @@ class SyncRenderFunction(Protocol[Tcontra]):
             request: The request being served.
 
         Returns:
-            The rendered string or a `Response` object.
+            The rendered string.
         """
         ...
 
@@ -30,9 +30,7 @@ class SyncRenderFunction(Protocol[Tcontra]):
 class AsyncRenderFunction(Protocol[Tcontra]):
     """Async render function definition."""
 
-    async def __call__(
-        self, result: Tcontra, *, context: dict[str, Any], request: Request
-    ) -> str | Response:
+    async def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> str:
         """
         Arguments:
             result: The result of the route the renderer is used on.
@@ -40,7 +38,7 @@ class AsyncRenderFunction(Protocol[Tcontra]):
             request: The request being served.
 
         Returns:
-            The rendered string or a `Response` object.
+            The rendered string.
         """
         ...
 

@@ -59,17 +59,13 @@ def hx(
             response = get_response(kwargs)
             rendered = await execute_maybe_sync_func(renderer, result, context=kwargs, request=__hx_request)
 
-            return (
-                HTMLResponse(
-                    rendered,
-                    # The default status code of the FastAPI Response dependency is None
-                    # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
-                    background=getattr(response, "background", None),
-                )
-                if isinstance(rendered, str)
-                else rendered
+            return HTMLResponse(
+                rendered,
+                # The default status code of the FastAPI Response dependency is None
+                # (not allowed by the typing but required for FastAPI).
+                status_code=getattr(response, "status_code", 200) or 200,
+                headers=getattr(response, "headers", None),
+                background=getattr(response, "background", None),
             )
 
         return append_to_signature(

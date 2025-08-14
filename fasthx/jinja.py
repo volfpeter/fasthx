@@ -331,50 +331,21 @@ class Jinja:
             error_renderer: Whether this is an error renderer creation.
         """
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
+        def render(result: Any, *, context: dict[str, Any], request: Request) -> str:
             template_name = self._resolve_template_name(
                 template,
                 error=result if error_renderer else None,
                 prefix=prefix,
                 request=request,
             )
-            return self._make_response(
-                template_name,
-                jinja_context=make_context(route_result=result, route_context=context),
+            result = self.templates.TemplateResponse(
+                name=template_name,
+                context=make_context(route_result=result, route_context=context),
                 request=request,
             )
+            return bytes(result.body).decode(result.charset)
 
         return render
-
-    def _make_response(
-        self,
-        template: str,
-        *,
-        jinja_context: dict[str, Any],
-        request: Request,
-    ) -> str | Response:
-        """
-        Creates the HTML response using the given Jinja template name and context.
-
-        Arguments:
-            template: The Jinja2 template selector to use.
-            jinja_context: The Jinj2 rendering context.
-            prefix: Optional template name prefix.
-            request: The current request.
-        """
-        # The reason for returning string from this method is to let `hx()` or `page()` create
-        # the HTML response - that way they can copy response headers and do other convenience
-        # conversions.
-        # The drawback is that users lose some of the baked-in debug utilities of TemplateResponse.
-        # This can be worked around by using a rendering context factory that includes the route's
-        # dependencies in the Jinja context. Then this method can be overridden to take the Response
-        # object from the context and copy the header from it into TemplateResponse.
-        result = self.templates.TemplateResponse(
-            name=template,
-            context=jinja_context,
-            request=request,
-        )
-        return bytes(result.body).decode(result.charset)
 
     def _resolve_template_name(
         self,
