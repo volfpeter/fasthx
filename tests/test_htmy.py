@@ -77,12 +77,12 @@ def htmy_app() -> FastAPI:  # noqa: C901
         return billy
 
     @app.get("/hx-no-selector", response_model=None)
-    @htmy.hx()  # HelloWorld is a component, render it as is.
+    @htmy.hx()  # type: ignore[arg-type]  # HelloWorld is a component, render it as is.
     def hx_no_selector() -> HelloWorld:
         return HelloWorld()
 
     @app.get("/page-no-selector", response_model=None)
-    @htmy.page()  # HelloWorld is a component, render it as is.
+    @htmy.page()  # type: ignore[arg-type]  # HelloWorld is a component, render it as is.
     def page_no_selector() -> HelloWorld:
         return HelloWorld()
 

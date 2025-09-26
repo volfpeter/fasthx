@@ -263,11 +263,11 @@ class HTMY:
         return result
 
 
-def _default_component_selector(route_result: Any) -> Any:
+def _default_component_selector(route_result: Any) -> h.Component:
     """
     Default component selector that returns the route result as is.
 
     It is assumed (and not validated) that the route result is a `htmy.Component` when
     this component selector is used. Otherwise rendering will fail.
     """
-    return route_result
+    return route_result  # type: ignore[no-any-return]
