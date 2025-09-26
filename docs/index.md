@@ -11,6 +11,8 @@
 
 FastAPI server-side rendering with built-in HTMX support.
 
+For an even deeper FastAPI integration and a Next.js-like developer experience, you should check out [holm](https://volfpeter.github.io/holm/).
+
 ## Key features
 
 - **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
