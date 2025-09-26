@@ -9,7 +9,7 @@ from fastapi import Request, Response
 
 from .component_selectors import ComponentHeader as _ComponentHeader
 from .core_decorators import hx, page
-from .typing import ComponentSelector, HTMLRenderer, MaybeAsyncFunc, P, RequestComponentSelector, T
+from .typing import ComponentSelector, MaybeAsyncFunc, P, RenderFunction, RequestComponentSelector, T
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -23,7 +23,7 @@ HTMYComponentSelector: TypeAlias = ComponentSelector[HTMYComponentFactory[T]]
 
 class ComponentHeader(_ComponentHeader[HTMYComponentFactory[T]]):
     """
-    `RequestComponentSelector` for HTMY components that takes selects the rendered component
+    `RequestComponentSelector` for HTMY components that selects the rendered component
     based on a request header.
     """
 
@@ -46,7 +46,7 @@ class CurrentRequest:
         Loads the current `Request` instance from the given context.
 
         Raises:
-            KeyError: If the there's no `Request` in the context.
+            KeyError: If there is no `Request` in the context.
             TypeError: If invalid data is stored for `Request`.
         """
         result = context[Request]
@@ -112,10 +112,10 @@ class HTMY:
     - All route parameters (as a `RouteParams` instance) that can be retrieved with
       `RouteParams.from_context()` in components.
     - Everything added through `self.request_processors`.
-    - The default context of `self.htmy`.
+    - The default context of `self.renderer`.
     """
 
-    htmy: h.Renderer = field(default_factory=h.Renderer)
+    renderer: h.RendererType = field(default_factory=h.Renderer)
     """The HTMY renderer to use."""
 
     no_data: bool = field(default=False, kw_only=True)
@@ -129,12 +129,12 @@ class HTMY:
     request_processors: list[RequestProcessor] = field(default_factory=list, kw_only=True)
     """
     A list of functions that expect the current request and return an `htmy` `Context` that should
-    be used during rendering in addition to the default context of `self.htmy`.
+    be used during rendering in addition to the default context of `self.renderer`.
     """
 
     def hx(
         self,
-        component_selector: HTMYComponentSelector[T],
+        component_selector: HTMYComponentSelector[T] | None = None,
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         no_data: bool = False,
@@ -143,12 +143,15 @@ class HTMY:
         Decorator for rendering the route's result if the request was an HTMX one.
 
         Arguments:
-            component_selector: The component selector to use.
+            component_selector: An optional component selector to use. If not provided, it is
+                assumed the route returns a component that should be rendered as is.
             error_component_selector: The component selector to use for route error rendering.
             no_data: If set, the route will only accept HTMX requests.
         """
         return hx(
-            self._make_render_function(component_selector),
+            self._make_render_function(
+                _default_component_selector if component_selector is None else component_selector
+            ),
             render_error=None
             if error_component_selector is None
             else self._make_error_render_function(error_component_selector),
@@ -157,7 +160,7 @@ class HTMY:
 
     def page(
         self,
-        component_selector: HTMYComponentSelector[T],
+        component_selector: HTMYComponentSelector[T] | None = None,
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
     ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
@@ -167,11 +170,14 @@ class HTMY:
         This decorator triggers HTML rendering regardless of whether the request was HTMX or not.
 
         Arguments:
-            component_selector: The component selector to use.
+            component_selector: An optional component selector to use. If not provided, it is
+                assumed the route returns a component that should be rendered as is.
             error_component_selector: The component selector to use for route error rendering.
         """
         return page(
-            self._make_render_function(component_selector),
+            self._make_render_function(
+                _default_component_selector if component_selector is None else component_selector
+            ),
             render_error=None
             if error_component_selector is None
             else self._make_error_render_function(error_component_selector),
@@ -195,9 +201,9 @@ class HTMY:
         Returns:
             The rendered component.
         """
-        return await self.htmy.render(component, self._make_render_context(request, {}))
+        return await self.renderer.render(component, self._make_render_context(request, {}))
 
-    def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> HTMLRenderer[T]:
+    def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> RenderFunction[T]:
         """
         Creates a render function that uses the given component selector.
         """
@@ -208,13 +214,15 @@ class HTMY:
                 if isinstance(component_selector, RequestComponentSelector)
                 else component_selector
             )
-            return await self.htmy.render(component(result), self._make_render_context(request, context))
+            return await self.renderer.render(
+                component(result), self._make_render_context(request, context)
+            )
 
         return render
 
     def _make_error_render_function(
         self, component_selector: HTMYComponentSelector[Exception]
-    ) -> HTMLRenderer[Exception]:
+    ) -> RenderFunction[Exception]:
         """
         Creates an error renderer function that uses the given component selector.
         """
@@ -225,7 +233,9 @@ class HTMY:
                 if isinstance(component_selector, RequestComponentSelector)
                 else component_selector
             )
-            return await self.htmy.render(component(result), self._make_render_context(request, context))
+            return await self.renderer.render(
+                component(result), self._make_render_context(request, context)
+            )
 
         return render
 
@@ -251,3 +261,13 @@ class HTMY:
             result.update(cp(request))
 
         return result
+
+
+def _default_component_selector(route_result: Any) -> h.Component:
+    """
+    Default component selector that returns the route result as is.
+
+    It is assumed (and not validated) that the route result is a `htmy.Component` when
+    this component selector is used. Otherwise rendering will fail.
+    """
+    return route_result  # type: ignore[no-any-return]

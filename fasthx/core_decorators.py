@@ -7,15 +7,15 @@ from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse
 
 from .dependencies import DependsHXRequest, DependsPageRequest
-from .typing import HTMLRenderer, MaybeAsyncFunc, P, T
+from .typing import MaybeAsyncFunc, P, RenderFunction, T
 from .utils import append_to_signature, execute_maybe_sync_func, get_response
 
 
 def hx(
-    render: HTMLRenderer[T],
+    render: RenderFunction[T],
     *,
     no_data: bool = False,
-    render_error: HTMLRenderer[Exception] | None = None,
+    render_error: RenderFunction[Exception] | None = None,
 ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
     """
     Decorator that converts a FastAPI route's return value into HTML if the request was
@@ -59,17 +59,13 @@ def hx(
             response = get_response(kwargs)
             rendered = await execute_maybe_sync_func(renderer, result, context=kwargs, request=__hx_request)
 
-            return (
-                HTMLResponse(
-                    rendered,
-                    # The default status code of the FastAPI Response dependency is None
-                    # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
-                    background=getattr(response, "background", None),
-                )
-                if isinstance(rendered, str)
-                else rendered
+            return HTMLResponse(
+                rendered,
+                # The default status code of the FastAPI Response dependency is None
+                # (not allowed by the typing but required for FastAPI).
+                status_code=getattr(response, "status_code", 200) or 200,
+                headers=getattr(response, "headers", None),
+                background=getattr(response, "background", None),
             )
 
         return append_to_signature(
@@ -85,9 +81,9 @@ def hx(
 
 
 def page(
-    render: HTMLRenderer[T],
+    render: RenderFunction[T],
     *,
-    render_error: HTMLRenderer[Exception] | None = None,
+    render_error: RenderFunction[Exception] | None = None,
 ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, Response]]]:
     """
     Decorator that converts a FastAPI route's return value into HTML.
@@ -102,7 +98,7 @@ def page(
         @wraps(func)
         async def wrapper(
             __page_request: DependsPageRequest, *args: P.args, **kwargs: P.kwargs
-        ) -> T | Response:
+        ) -> Response:
             try:
                 result = await execute_maybe_sync_func(func, *args, **kwargs)
                 renderer = render
@@ -120,17 +116,14 @@ def page(
             rendered = await execute_maybe_sync_func(
                 renderer, result, context=kwargs, request=__page_request
             )
-            return (
-                HTMLResponse(
-                    rendered,
-                    # The default status code of the FastAPI Response dependency is None
-                    # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
-                    background=getattr(response, "background", None),
-                )
-                if isinstance(rendered, str)
-                else rendered
+
+            return HTMLResponse(
+                rendered,
+                # The default status code of the FastAPI Response dependency is None
+                # (not allowed by the typing but required for FastAPI).
+                status_code=getattr(response, "status_code", 200) or 200,
+                headers=getattr(response, "headers", None),
+                background=getattr(response, "background", None),
             )
 
         return append_to_signature(

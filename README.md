@@ -22,6 +22,14 @@ FastAPI server-side rendering with built-in HTMX support.
 - **Correct typing** makes it possible to apply other (typed) decorators to your routes.
 - Works with both **sync** and **async routes**.
 
+## Testimonials
+
+"Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77))
+
+"One of the main parts of the `FastAPI` -> `fasthx` -> `htmy` integration I'm falling in love with is its explicitness, and not too much magic happening." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+
+"Thank you for your work on `htmy` and `fasthx`, both have been very pleasant to use, and the APIs are both intuitive and simple. Great work." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+
 ## Support
 
 Consider supporting the development and maintenance of the project through [sponsoring](https://buymeacoffee.com/volfpeter), or reach out for [consulting](https://www.volfp.com/contact?subject=Consulting%20-%20FastHX) so you can get the most out of the library.
@@ -41,10 +49,9 @@ The package has optional dependencies for the following **official integrations*
 
 ## Core concepts
 
-The core concept of FastHX is to let FastAPI routes do their usual job of handling the business logic and returning the result, while the FastHX decorators take care
-of the entire rendering / presentation layer using a declarative, decorator-based approach.
+The core concept of FastHX is to let FastAPI routes do their usual job of handling the business logic and returning the result, while the FastHX decorators take care of the entire rendering and presentation layer using a declarative, decorator-based approach.
 
-Interally, FastHX decorators always have access to the decorated route's result, all of its arguments (sometimes called the request context), and the current request. Integrations convert these values into data that can be consumed by the used rendering engine (for example `htmy` or `jinja`), run the rendering engine with the selected component (more on this below) and the created data, and return the result to the client. For more details on how data conversion works and how it can be customized, please see the API documentation of the rendering engine integration of your choice.
+Internally, FastHX decorators always have access to the decorated route's result, all of its arguments (sometimes called the request context), and the current request. Integrations convert these values into data that can be consumed by the used rendering engine (for example `htmy` or `jinja`), run the rendering engine with the selected component (more on this below) and the created data, and return the result to the client. For more details on how data conversion works and how it can be customized, please see the API documentation of the rendering engine integration of your choice.
 
 The `ComponentSelector` abstraction makes it possible to declaratively specify and dynamically select the component that should be used to render the response to a given request. It is also possible to define an "error" `ComponentSelector` that is used if the decorated route raises an exception -- a typical use-case being error rendering for incorrect user input.
 
@@ -98,12 +105,12 @@ def index() -> None: ...
 
 Requires: `pip install fasthx[jinja]`.
 
-To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
+To start serving HTML and HTMX requests, all you need to do is create an instance of `fasthx.jinja.Jinja` and use its `hx()` or `page()` methods as decorators on your routes. `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
 ```python
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
-from fasthx import Jinja
+from fasthx.jinja import Jinja
 from pydantic import BaseModel
 
 # Pydantic model of the data the example API is using.
@@ -145,7 +152,7 @@ See the full working example [here](https://github.com/volfpeter/fasthx/tree/mai
 
 Requires: `pip install fasthx`.
 
-If you would like to use a rendering engine without FastHX integration, you can easily build on the `hx()` and `page()` decorators which give you all the functionality you will need. All you need to do is implement the `HTMLRenderer` protocol.
+If you would like to use a rendering engine without FastHX integration, you can easily build on the `hx()` and `page()` decorators which give you all the functionality you will need. All you need to do is implement the `RenderFunction` protocol.
 
 Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
@@ -158,7 +165,7 @@ from fasthx import hx, page
 # Create the app.
 app = FastAPI()
 
-# Create a dependecy to see that its return value is available in the render function.
+# Create a dependency to see that its return value is available in the render function.
 def get_random_number() -> int:
     return 4  # Chosen by fair dice roll.
 

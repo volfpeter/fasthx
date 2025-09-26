@@ -8,12 +8,12 @@ First, let's create an `htmy_app.py` file, import everything that is required fo
 import random
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 from fastapi import FastAPI
+from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
 from htmy import Component, Context, html
 from pydantic import BaseModel
-
-from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
 
 
 class User(BaseModel):
@@ -23,24 +23,19 @@ class User(BaseModel):
     birthday: date
 ```
 
-The main content on the user interface will be a user list, so let's start by creating a simple `UserListItem` component:
+The main content on the user interface will be a user list, so let's start by creating a simple `user_list_item` component factory (see the [htmy components guide](https://volfpeter.github.io/htmy/components-guide/) for more information):
 
 ```python
-@dataclass
-class UserListItem:
-    """User list item component."""
-
-    user: User
-
-    def htmy(self, context: Context) -> Component:
-        return html.li(
-            html.span(self.user.name, class_="font-semibold"),
-            html.em(f" (born {self.user.birthday.isoformat()})"),
-            class_="text-lg",
-        )
+def user_list_item(user: User) -> html.li:
+    """User list item component factory."""
+    return html.li(
+        html.span(user.name, class_="font-semibold"),
+        html.em(f" (born {user.birthday.isoformat()})"),
+        class_="text-lg",
+    )
 ```
 
-As you can see, the component has a single `user` property and it renders an `<li>` HTML element with the user's name and birthday in it.
+As you can see, the component factory expects a `user` and it creates an `<li>` HTML element with the user's name and birthday in it.
 
 The next component we need is the user list itself. This is going to be the most complex part of the example:
 
@@ -70,7 +65,7 @@ class UserOverview:
         rerenders: int = route_params["rerenders"]
 
         # Create the user list item generator.
-        user_list_items = (UserListItem(u) for u in self.users)
+        user_list_items = (user_list_item(u) for u in self.users)
 
         # Create the ordered or unordered user list.
         user_list = (
@@ -92,7 +87,7 @@ class UserOverview:
             user_list,
             # -- HTMX directives.
             hx_trigger="load delay:1000",
-            hx_get=f"/users?rerenders={rerenders+1}",
+            hx_get=f"/users?rerenders={rerenders + 1}",
             hx_swap="outerHTML",
             # Send the next component variant in an X-Component header.
             hx_headers=f'{{"X-Component": "{next_variant}"}}',
@@ -107,37 +102,33 @@ Most of this code is basic Python and `htmy` usage (including the `hx_*` `HTMX` 
 - The use of `RouteParams.from_context()` to get access to every route parameter (resolved FastAPI dependency) as a mapping.
 - The `context["user-agent"]` lookup that accesses a value from the context which will be added by a _request processor_ later in the example.
 
-We need one last `htmy` component, the index page. Most of this component is just the basic HTML document structure with some TailwindCSS styling and metadata. There is also a bit of `HTMX` in the `body` for lazy loading the actual page content, the user list we just created.
+We need one last `htmy` component, the index page. Most of this component (component factory to be more precise) is just the basic HTML document structure with some TailwindCSS styling and metadata. There is also a bit of `HTMX` in the `body` for lazy loading the actual page content, the user list we just created.
 
 ```python
-@dataclass
-class IndexPage:
-    """Index page with TailwindCSS styling."""
-
-    def htmy(self, context: Context) -> Component:
-        return (
-            html.DOCTYPE.html,
-            html.html(
-                html.head(
-                    # Some metadata
-                    html.title("FastHX + HTMY example"),
-                    html.meta.charset(),
-                    html.meta.viewport(),
-                    # TailwindCSS
-                    html.script(src="https://cdn.tailwindcss.com"),
-                    # HTMX
-                    html.script(src="https://unpkg.com/htmx.org@2.0.2"),
-                ),
-                html.body(
-                    # Page content: lazy-loaded user list.
-                    html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"),
-                    class_=(
-                        "h-screen w-screen flex flex-col items-center justify-center "
-                        " gap-4 bg-slate-800 text-white"
-                    ),
+def index_page(_: Any) -> Component:
+    return (
+        html.DOCTYPE.html,
+        html.html(
+            html.head(
+                # Some metadata
+                html.title("FastHX + HTMY example"),
+                html.meta.charset(),
+                html.meta.viewport(),
+                # TailwindCSS
+                html.script(src="https://cdn.tailwindcss.com"),
+                # HTMX
+                html.script(src="https://unpkg.com/htmx.org@2.0.2"),
+            ),
+            html.body(
+                # Page content: lazy-loaded user list.
+                html.div(hx_get="/users", hx_trigger="load", hx_swap="outerHTML"),
+                class_=(
+                    "h-screen w-screen flex flex-col items-center justify-center "
+                    " gap-4 bg-slate-800 text-white"
                 ),
             ),
-        )
+        ),
+    )
 ```
 
 With all the components ready, we can now create the `FastAPI` and `fasthx.htmy.HTMY` instances:
@@ -159,11 +150,11 @@ Note how we added a _request processor_ function to the `HTMY` instance that tak
 
 All that remains now is the routing. We need two routes: one that serves the index page, and one that renders the ordered or unordered user list.
 
-The index page route is trivial. The `htmy.page()` decorator expects a component factory (well more precisely a `fasthx.ComponentSelector`) that accepts the route's return value and returns an `htmy` component. Since `IndexPage` has no properties, we use a simple `lambda` to create such a function:
+The index page route is trivial. The `htmy.page()` decorator expects a component factory (well more precisely a `fasthx.ComponentSelector`) that accepts the route's return value and returns an `htmy` component. `index_page` is implemented exactly like this, so we can use it directly in the decorator:
 
 ```python
 @app.get("/")
-@htmy.page(lambda _: IndexPage())
+@htmy.page(index_page)
 def index() -> None:
     """The index page of the application."""
     ...

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from fasthx import Jinja
+from fasthx.jinja import Jinja
 
 
 # Pydantic model of the data the example API is using.

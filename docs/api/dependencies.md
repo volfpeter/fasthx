@@ -1,11 +1,4 @@
-# FastAPI Dependencies
-
-## ::: fasthx.DependsHXRequest
-
-    options:
-        show_root_heading: true
-
-## ::: fasthx.get_hx_request
+# ::: fasthx.dependencies
 
     options:
         show_root_heading: true

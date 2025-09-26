@@ -1,11 +1,4 @@
-# Core Decorators
-
-## ::: fasthx.hx
-
-    options:
-        show_root_heading: true
-
-## ::: fasthx.page
+# ::: fasthx.core_decorators
 
     options:
         show_root_heading: true

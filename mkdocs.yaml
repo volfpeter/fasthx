@@ -50,10 +50,11 @@ nav:
       - examples/custom-templating.md
   - API Reference:
       - api/core-decorators.md
-      - Component Selectors: api/component_selectors.md
-      - HTMY: api/htmy.md
+      - api/component_selectors.md
+      - htmy: api/htmy.md
       - api/jinja.md
       - api/dependencies.md
       - api/typing.md
   - Migrations:
+      - migrations/2-to-3.md
       - migrations/1-to-2.md

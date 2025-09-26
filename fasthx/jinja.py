@@ -1,20 +1,35 @@
-from collections.abc import Callable, Collection, Iterable
+from collections.abc import Callable, Collection, Coroutine, Iterable
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Any, Coroutine
+from typing import Any, Protocol
 
 from fastapi import Request, Response
 from fastapi.templating import Jinja2Templates
 
+from .component_selectors import ComponentHeader as _ComponentHeader
 from .core_decorators import hx, page
-from .typing import (
-    ComponentSelector,
-    HTMLRenderer,
-    JinjaContextFactory,
-    MaybeAsyncFunc,
-    P,
-    RequestComponentSelector,
-)
+from .typing import ComponentSelector, MaybeAsyncFunc, P, RenderFunction, RequestComponentSelector
+
+
+class JinjaContextFactory(Protocol):
+    """
+    Protocol definition for methods that convert a FastAPI route's result and route context
+    (i.e. the route's arguments) into a Jinja context (`dict`).
+    """
+
+    def __call__(self, *, route_result: Any, route_context: dict[str, Any]) -> dict[str, Any]:
+        """
+        Arguments:
+            route_result: The result of the route.
+            route_context: Every keyword argument the route received.
+
+        Returns:
+            The Jinja context dictionary.
+
+        Raises:
+            ValueError: If converting the arguments to a Jinja context fails.
+        """
+        ...
 
 
 class JinjaPath(str):
@@ -176,7 +191,7 @@ class JinjaContext:
         Arguments:
             result_key: The key by which the `route_result` should be accessible in templates.
                 See `JinjaContextFactory` for `route_result` details.
-            context_key: The key by whih the `route_context` should be accessible in templates.
+            context_key: The key by which the `route_context` should be accessible in templates.
                 If `None` (the default), then the `route_context` will not be accessible.
                 See `JinjaContextFactory` for `route_context` details.
 
@@ -200,71 +215,13 @@ class JinjaContext:
         return wrap
 
 
-@dataclass(frozen=True, slots=True)
-class TemplateHeader:
+class ComponentHeader(_ComponentHeader[str]):
     """
-    Template selector that takes the Jinja template name from a request header.
-
-    This class makes it possible for the client to submit the *key/ID* of the required template
-    to the server in a header. The Jinja decorators will then look up and render the requested
-    template if it exists. If the client doesn't request a specific template, then `default`
-    will be used if it was set, otherwise an exception will be raised.
-
-    By default this class treats template keys as case-insensitive. If you'd like to disable
-    this behavior, set `case_sensitive` to `True`.
-
-    This class can also handle route errors if the `error` property is set.
-
-    Implements:
-        - `RequestComponentSelector[str]`.
+    `RequestComponentSelector` for Jinja templates that selects the rendered template
+    based on a request header.
     """
 
-    header: str
-    """The header which is used by the client to communicate the *key* of the requested template."""
-
-    templates: dict[str, str]
-    """Dictionary that maps template keys to template (file) names."""
-
-    error: type[Exception] | tuple[type[Exception], ...] | None = field(default=None, kw_only=True)
-    """The accepted error or errors."""
-
-    default: str | None = field(default=None, kw_only=True)
-    """The template to use when the client didn't request a specific one."""
-
-    case_sensitive: bool = field(default=False, kw_only=True)
-    """Whether the keys of `templates` are case-sensitive or not (default is `False`)."""
-
-    def __post_init__(self) -> None:
-        if not self.case_sensitive:
-            object.__setattr__(
-                self,
-                "templates",
-                {k.lower(): v for k, v in self.templates.items()},
-            )
-
-    def get_component(self, request: Request, error: Exception | None) -> str:
-        """
-        Returns the name of the template that was requested by the client.
-
-        If the request doesn't contain a header (with the name `self.header`),
-        then `self.default` will be returned if it's not `None`.
-
-        Raises:
-            KeyError: If the client requested a specific template but it's unknown, or
-                if no template was requested and there's no default either.
-        """
-        if error is not None and (self.error is None or not isinstance(error, self.error)):
-            raise error
-
-        if (key := request.headers.get(self.header, None)) is not None:
-            if not self.case_sensitive:
-                key = key.lower()
-
-            return self.templates[key]
-        elif self.default is None:
-            raise KeyError("Default template was not set and header was not found.")
-        else:
-            return self.default
+    ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -363,9 +320,9 @@ class Jinja:
         make_context: JinjaContextFactory,
         prefix: str | None,
         error_renderer: bool = False,
-    ) -> HTMLRenderer[Any]:
+    ) -> RenderFunction[Any]:
         """
-        Creates an `HTMLRenderer` with the given configuration.
+        Creates a `RenderFunction` with the given configuration.
 
         Arguments:
             template: The template the renderer function should use.
@@ -374,50 +331,21 @@ class Jinja:
             error_renderer: Whether this is an error renderer creation.
         """
 
-        def render(result: Any, *, context: dict[str, Any], request: Request) -> str | Response:
+        def render(result: Any, *, context: dict[str, Any], request: Request) -> str:
             template_name = self._resolve_template_name(
                 template,
                 error=result if error_renderer else None,
                 prefix=prefix,
                 request=request,
             )
-            return self._make_response(
-                template_name,
-                jinja_context=make_context(route_result=result, route_context=context),
+            result = self.templates.TemplateResponse(
+                name=template_name,
+                context=make_context(route_result=result, route_context=context),
                 request=request,
             )
+            return bytes(result.body).decode(result.charset)
 
         return render
-
-    def _make_response(
-        self,
-        template: str,
-        *,
-        jinja_context: dict[str, Any],
-        request: Request,
-    ) -> str | Response:
-        """
-        Creates the HTML response using the given Jinja template name and context.
-
-        Arguments:
-            template: The Jinja2 template selector to use.
-            jinja_context: The Jinj2 rendering context.
-            prefix: Optional template name prefix.
-            request: The current request.
-        """
-        # The reason for returning string from this method is to let `hx()` or `page()` create
-        # the HTML response - that way they can copy response headers and do other convenience
-        # conversions.
-        # The drawback is that users lose some of the baked-in debug utilities of TemplateResponse.
-        # This can be worked around by using a rendering context factory that includes the route's
-        # dependencies in the Jinja context. Then this method can be overridden to take the Response
-        # object from the context and copy the header from it into TemplateResponse.
-        result = self.templates.TemplateResponse(
-            name=template,
-            context=jinja_context,
-            request=request,
-        )
-        return bytes(result.body).decode(result.charset)
 
     def _resolve_template_name(
         self,

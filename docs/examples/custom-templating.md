@@ -1,6 +1,6 @@
 # Custom Templating
 
-If you're not into Jinja templating, the `hx()` and `page()` decorators give you all the flexibility you need: you can integrate any HTML rendering or templating engine into `fasthx` simply by implementing the `HTMLRenderer` protocol. Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
+If you're not into Jinja templating, the `hx()` and `page()` decorators give you all the flexibility you need: you can integrate any HTML rendering or templating engine into `fasthx` simply by implementing the `RenderFunction` protocol. Similarly to the Jinja case, `hx()` only triggers HTML rendering for HTMX requests, while `page()` unconditionally renders HTML. See the example code below:
 
 ```python
 from typing import Annotated, Any
@@ -11,7 +11,7 @@ from fasthx import hx, page
 # Create the app.
 app = FastAPI()
 
-# Create a dependecy to see that its return value is available in the render function.
+# Create a dependency to see that its return value is available in the render function.
 def get_random_number() -> int:
     return 4  # Chosen by fair dice roll.
 
@@ -20,7 +20,7 @@ DependsRandomNumber = Annotated[int, Depends(get_random_number)]
 # Create the render methods: they must always have these three arguments.
 # If you're using static type checkers, the type hint of `result` must match
 # the return type annotation of the route on which this render method is used.
-def render_index(result: list[dict[str, str]], *, context: dict[str, Any], request: Request) -> str:
+def render_index(result: Any, *, context: dict[str, Any], request: Request) -> str:
     return "<h1>Hello FastHX</h1>"
 
 def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], request: Request) -> str:

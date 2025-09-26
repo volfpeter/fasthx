@@ -76,6 +76,16 @@ def htmy_app() -> FastAPI:  # noqa: C901
     def header_with_no_default() -> User:
         return billy
 
+    @app.get("/hx-no-selector", response_model=None)
+    @htmy.hx()  # type: ignore[arg-type]  # HelloWorld is a component, render it as is.
+    def hx_no_selector() -> HelloWorld:
+        return HelloWorld()
+
+    @app.get("/page-no-selector", response_model=None)
+    @htmy.page()  # type: ignore[arg-type]  # HelloWorld is a component, render it as is.
+    def page_no_selector() -> HelloWorld:
+        return HelloWorld()
+
     @app.get("/error")
     @app.get("/error/{kind}")
     @htmy.hx(  # type: ignore[arg-type]
@@ -184,6 +194,8 @@ def htmy_client(htmy_app: FastAPI) -> TestClient:
             {},
         ),
         ("/header-with-no-default", {"HX-Request": "true"}, 500, "", {}),
+        ("/hx-no-selector", {"HX-Request": "true"}, 200, "Hello World!", {}),
+        ("/page-no-selector", {"HX-Request": "true"}, 200, "Hello World!", {}),
         # htmy.hx(no_data=True) - raises exception for non-HTMX requests.
         ("/htmx-only", {"HX-Request": "true"}, 200, user_list_html, {}),
         ("/htmx-only", None, 400, "", {}),
