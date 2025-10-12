@@ -16,7 +16,7 @@ def hx(
     *,
     no_data: bool = False,
     render_error: RenderFunction[Exception] | None = None,
-) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
+) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
     """
     Decorator that converts a FastAPI route's return value into HTML if the request was
     an HTMX one.
@@ -31,7 +31,9 @@ def hx(
         The rendered HTML for HTMX requests, otherwise the route's unchanged return value.
     """
 
-    def decorator(func: MaybeAsyncFunc[P, T]) -> Callable[P, Coroutine[None, None, T | Response]]:
+    def decorator(
+        func: MaybeAsyncFunc[P, T | Response],
+    ) -> Callable[P, Coroutine[None, None, T | Response]]:
         @wraps(func)
         async def wrapper(
             __hx_request: DependsHXRequest, *args: P.args, **kwargs: P.kwargs
@@ -84,7 +86,7 @@ def page(
     render: RenderFunction[T],
     *,
     render_error: RenderFunction[Exception] | None = None,
-) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, Response]]]:
+) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, Response]]]:
     """
     Decorator that converts a FastAPI route's return value into HTML.
 
@@ -94,7 +96,7 @@ def page(
             If not `None`, it is expected to raise an error if the exception can not be rendered.
     """
 
-    def decorator(func: MaybeAsyncFunc[P, T]) -> Callable[P, Coroutine[None, None, Response]]:
+    def decorator(func: MaybeAsyncFunc[P, T | Response]) -> Callable[P, Coroutine[None, None, Response]]:
         @wraps(func)
         async def wrapper(
             __page_request: DependsPageRequest, *args: P.args, **kwargs: P.kwargs

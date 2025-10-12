@@ -138,7 +138,7 @@ class HTMY:
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         no_data: bool = False,
-    ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
+    ) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
         """
         Decorator for rendering the route's result if the request was an HTMX one.
 
@@ -163,7 +163,7 @@ class HTMY:
         component_selector: HTMYComponentSelector[T] | None = None,
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
-    ) -> Callable[[MaybeAsyncFunc[P, T]], Callable[P, Coroutine[None, None, T | Response]]]:
+    ) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
         """
         Decorator for rendering a route's result.
 

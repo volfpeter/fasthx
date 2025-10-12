@@ -38,7 +38,9 @@ def htmy_app() -> FastAPI:  # noqa: C901
 
     @app.get("/htmx-or-data")
     @htmy.hx(UserList)
-    def htmx_or_data(response: Response) -> list[User]:
+    def htmx_or_data(
+        response: Response,
+    ) -> list[User]:
         response.headers["test-header"] = "exists"
         return users
 
