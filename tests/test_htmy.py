@@ -33,14 +33,14 @@ def htmy_app() -> FastAPI:  # noqa: C901
 
     @app.get("/")
     @htmy.page(UserList)
-    def index() -> list[User] | Response:  # Response in type hint to ensure mypy doesn't complain about it.
+    def index() -> list[User]:
         return users
 
     @app.get("/htmx-or-data")
     @htmy.hx(UserList)
     def htmx_or_data(
         response: Response,
-    ) -> list[User] | Response:  # Response in type hint to ensure mypy doesn't complain about it.
+    ) -> list[User]:
         response.headers["test-header"] = "exists"
         return users
 
