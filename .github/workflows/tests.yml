@@ -10,7 +10,7 @@ on:
       - synchronize
 
 jobs:
-  Linters:
+  Tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
