@@ -46,7 +46,7 @@ def hx_app() -> FastAPI:  # noqa: C901
     def index(
         request: Request,  # Testing workaround for FastAPI bug. https://github.com/fastapi/fastapi/pull/12406
         random_number: DependsRandomNumber,
-    ) -> list[User]:
+    ) -> list[User] | Response:  # Response in type hint to ensure mypy doesn't complain about it.
         return users
 
     @app.get("/htmx-or-data")
@@ -55,7 +55,7 @@ def hx_app() -> FastAPI:  # noqa: C901
         request: Request,  # Testing workaround for FastAPI bug. https://github.com/fastapi/fastapi/pull/12406
         random_number: DependsRandomNumber,
         response: Response,
-    ) -> list[User]:
+    ) -> list[User] | Response:  # Response in type hint to ensure mypy doesn't complain about it.
         response.headers["test-header"] = "exists"
         return users
 
