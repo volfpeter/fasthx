@@ -31,17 +31,17 @@ def render_user_list(result: list[dict[str, str]], *, context: dict[str, Any], r
     return f"{lucky_number}\n{users}"
 
 @app.get("/")
-@page(render_index)
+@page(render_index)  # type: ignore[arg-type]
 def index() -> None:
     ...
 
 @app.get("/htmx-or-data")
-@hx(render_user_list)
+@hx(render_user_list)  # type: ignore[arg-type]
 def htmx_or_data(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
 
 @app.get("/htmx-only")
-@hx(render_user_list, no_data=True)
+@hx(render_user_list, no_data=True)  # type: ignore[arg-type]
 async def htmx_only(random_number: DependsRandomNumber) -> list[dict[str, str]]:
     return [{"name": "Joe"}]
 ```

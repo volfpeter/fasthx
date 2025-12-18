@@ -4,7 +4,7 @@ from datetime import date
 from typing import Any
 
 from fastapi import FastAPI
-from htmy import Component, Context, html
+from htmy import Component, ComponentType, Context, html
 from pydantic import BaseModel
 
 from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
@@ -22,7 +22,7 @@ class User(BaseModel):
 # -- HTMY components
 
 
-def user_list_item(user: User) -> Component:
+def user_list_item(user: User) -> ComponentType:
     """User list item component factory."""
     return html.li(
         html.span(user.name, class_="font-semibold"),
@@ -91,8 +91,8 @@ def index_page(_: Any) -> Component:
             html.head(
                 # Some metadata
                 html.title("FastHX + HTMY example"),
-                html.meta.charset(),
-                html.meta.viewport(),
+                html.Meta.charset(),
+                html.Meta.viewport(),
                 # TailwindCSS
                 html.script(src="https://cdn.tailwindcss.com"),
                 # HTMX
