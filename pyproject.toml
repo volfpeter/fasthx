@@ -1,38 +1,32 @@
-[tool.poetry]
+[project]
 name = "fasthx"
 version = "3.0.1"
 description = "FastAPI server-side rendering with built-in HTMX support."
-authors = ["Peter Volf <do.volfp@gmail.com>"]
+authors = [{ name = "Peter Volf", email = "do.volfp@gmail.com" }]
+requires-python = ">=3.10,<4"
 readme = "README.md"
 license = "MIT"
+dependencies = ["fastapi>=0.100.0"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-fastapi = ">=0.100.0"
-htmy = { extras = ["lxml"], version = ">=0.8.1", optional = true }
-jinja2 = { version = "^3.0.0", optional = true }
+[project.optional-dependencies]
+htmy = ["htmy[lxml]>=0.8.1"]
+jinja = ["jinja2>=3.0.0,<4"]
 
-[tool.poetry.extras]
-htmy = ["htmy"]
-jinja = ["jinja2"]
-
-[tool.poetry.group.dev.dependencies]
-htmy = { extras = ["lxml"], version = ">=0.8.1"}
-httpx = "^0.26.0"
-jinja2 = "^3.0.0"
-mkdocs-material = "^9.6.15"
-mkdocstrings = {extras = ["python"], version = "^0.30.0"}
-mypy = "^1.17.0"
-poethepoet = "^0.36.0"
-pytest = "^8.4.1"
-pytest-random-order = "^1.2.0"
-ruff = "^0.12.4"
-typing-extensions = ">=4.5.0"
-uvicorn = "^0.35.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "htmy[lxml]>=0.8.1",
+    "httpx>=0.26.0,<0.27",
+    "jinja2>=3.0.0,<4",
+    "mkdocs-material>=9.6.15,<10",
+    "mkdocstrings[python]>=0.30.0,<0.31",
+    "mypy>=1.17.0,<2",
+    "poethepoet>=0.36.0,<0.37",
+    "pytest>=8.4.1,<9",
+    "pytest-random-order>=1.2.0,<2",
+    "ruff>=0.12.4,<0.13",
+    "typing-extensions>=4.5.0",
+    "uvicorn>=0.35.0,<0.36",
+]
 
 [tool.mypy]
 strict = true
@@ -84,3 +78,7 @@ check.ignore_fail = "return_non_zero"
 test = "python -m pytest tests"
 
 serve-docs = "mkdocs serve"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
