@@ -1,3 +1,5 @@
+__version__ = "3.0.1"
+
 from .component_selectors import ComponentHeader as ComponentHeader
 from .core_decorators import hx as hx
 from .core_decorators import page as page

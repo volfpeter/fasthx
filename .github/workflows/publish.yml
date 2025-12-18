@@ -14,24 +14,23 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          # Issue ref: https://github.com/actions/setup-python/issues/436
-          # cache: "pip"
-          cache-dependency-path: pyproject.toml
           python-version-file: pyproject.toml
 
-      - name: Install poetry
-        run: python3 -m pip install poetry
-
       - name: Install dependencies
-        run: poetry install
+        run: uv sync
 
-      - name: Build package to dist/
-        run: poetry build
+      - name: Build package
+        run: uv build
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

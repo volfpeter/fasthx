@@ -11,9 +11,12 @@ from datetime import date
 from typing import Any
 
 from fastapi import FastAPI
-from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
-from htmy import Component, Context, html
+from htmy import Component, ComponentType, Context, html
 from pydantic import BaseModel
+
+from fasthx.htmy import HTMY, ComponentHeader, CurrentRequest, RouteParams
+
+# -- Models
 
 
 class User(BaseModel):
@@ -26,7 +29,7 @@ class User(BaseModel):
 The main content on the user interface will be a user list, so let's start by creating a simple `user_list_item` component factory (see the [htmy components guide](https://volfpeter.github.io/htmy/components-guide/) for more information):
 
 ```python
-def user_list_item(user: User) -> html.li:
+def user_list_item(user: User) -> ComponentType:
     """User list item component factory."""
     return html.li(
         html.span(user.name, class_="font-semibold"),
@@ -112,8 +115,8 @@ def index_page(_: Any) -> Component:
             html.head(
                 # Some metadata
                 html.title("FastHX + HTMY example"),
-                html.meta.charset(),
-                html.meta.viewport(),
+                html.Meta.charset(),
+                html.Meta.viewport(),
                 # TailwindCSS
                 html.script(src="https://cdn.tailwindcss.com"),
                 # HTMX
