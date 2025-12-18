@@ -101,6 +101,16 @@ ipython_config.py
 #   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
 poetry.lock
 
+# uv
+#   The uv.lock file is the lockfile for uv, similar to poetry.lock or Pipfile.lock.
+#   For application projects, it is recommended to commit uv.lock to ensure reproducible
+#   installations across environments (see https://docs.astral.sh/uv/concepts/projects/#lockfiles).
+#   For library projects (publishable packages), it is recommended NOT to commit uv.lock,
+#   so that downstream users can resolve dependencies themselves and avoid platform-specific
+#   conflicts. This is the common practice (see discussion: https://github.com/astral-sh/uv/issues/10730).
+#   Since this is a library project, we ignore uv.lock.
+uv.lock
+
 # pdm
 #   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
 #pdm.lock
