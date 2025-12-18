@@ -14,21 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          # Issue ref: https://github.com/actions/setup-python/issues/436
-          # cache: "pip"
-          cache-dependency-path: pyproject.toml
           python-version-file: pyproject.toml
 
-      - name: Install poetry
-        run: python3 -m pip install poetry
-
       - name: Install dependencies
-        run: poetry install
+        run: uv sync
 
       - name: Run tests
-        run: poetry run poe test
+        run: uv run poe test

@@ -1,42 +1,47 @@
-[tool.poetry]
+[project]
 name = "fasthx"
-version = "3.0.1"
+dynamic = ["version"]
 description = "FastAPI server-side rendering with built-in HTMX support."
-authors = ["Peter Volf <do.volfp@gmail.com>"]
-readme = "README.md"
+authors = [{ name = "Peter Volf", email = "do.volfp@gmail.com" }]
 license = "MIT"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["fastapi>=0.100.0"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-fastapi = ">=0.100.0"
-htmy = { extras = ["lxml"], version = ">=0.8.1", optional = true }
-jinja2 = { version = "^3.0.0", optional = true }
+[project.optional-dependencies]
+htmy = ["htmy[lxml]>=0.8.1"]
+jinja = ["jinja2>=3.0.0,<4"]
 
-[tool.poetry.extras]
-htmy = ["htmy"]
-jinja = ["jinja2"]
-
-[tool.poetry.group.dev.dependencies]
-htmy = { extras = ["lxml"], version = ">=0.8.1"}
-httpx = "^0.26.0"
-jinja2 = "^3.0.0"
-mkdocs-material = "^9.6.15"
-mkdocstrings = {extras = ["python"], version = "^0.30.0"}
-mypy = "^1.17.0"
-poethepoet = "^0.36.0"
-pytest = "^8.4.1"
-pytest-random-order = "^1.2.0"
-ruff = "^0.12.4"
-typing-extensions = ">=4.5.0"
-uvicorn = "^0.35.0"
+[dependency-groups]
+dev = [
+    "htmy[lxml]>=0.8.1",
+    "httpx>=0.26.0",
+    "jinja2>=3.0.0,<4",
+    "mkdocstrings[python]>=0.30.0",
+    "mypy>=1.17.0",
+    "poethepoet>=0.38.0",
+    "pytest>=9.0.2",
+    "pytest-random-order>=1.2.0",
+    "ruff>=0.14.8,<0.15",
+    "typing-extensions>=4.5.0",
+    "uvicorn>=0.35.0",
+    "zensical>=0.0.11",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool.mypy]
 strict = true
 show_error_codes = true
+
+[tool.pdm.build]
+excludes = ["tests/", "examples/"]
+
+[tool.pdm.version]
+source = "file"
+path = "fasthx/__init__.py"
 
 [tool.pyright]
 venvPath = "."
@@ -83,4 +88,4 @@ check.ignore_fail = "return_non_zero"
 
 test = "python -m pytest tests"
 
-serve-docs = "mkdocs serve"
+serve-docs = "zensical serve"

@@ -26,7 +26,7 @@ class User(BaseModel):
 The main content on the user interface will be a user list, so let's start by creating a simple `user_list_item` component factory (see the [htmy components guide](https://volfpeter.github.io/htmy/components-guide/) for more information):
 
 ```python
-def user_list_item(user: User) -> html.li:
+def user_list_item(user: User) -> Component:
     """User list item component factory."""
     return html.li(
         html.span(user.name, class_="font-semibold"),

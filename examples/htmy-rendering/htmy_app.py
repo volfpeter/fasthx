@@ -22,7 +22,7 @@ class User(BaseModel):
 # -- HTMY components
 
 
-def user_list_item(user: User) -> html.li:
+def user_list_item(user: User) -> Component:
     """User list item component factory."""
     return html.li(
         html.span(user.name, class_="font-semibold"),
