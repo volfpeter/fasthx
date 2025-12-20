@@ -1,7 +1,7 @@
 import inspect
-from collections.abc import AsyncIterable, Callable
+from collections.abc import AsyncIterable, Callable, Coroutine
 from functools import wraps
-from typing import Coroutine, Literal, TypeAlias, cast, overload
+from typing import Literal, TypeAlias, cast, overload
 
 from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
