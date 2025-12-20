@@ -1,4 +1,4 @@
-from collections.abc import Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine
 from typing import Any, ParamSpec, Protocol, TypeAlias, TypeVar, runtime_checkable
 
 from fastapi import Request
@@ -45,6 +45,22 @@ class AsyncRenderFunction(Protocol[Tcontra]):
 
 RenderFunction: TypeAlias = SyncRenderFunction[Tcontra] | AsyncRenderFunction[Tcontra]
 """Sync or async render function type."""
+
+
+class StreamingRenderFunction(Protocol[Tcontra]):
+    """Streaming render function definition that yields HTML chunks."""
+
+    def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> AsyncIterator[str]:
+        """
+        Arguments:
+            result: The result of the route the renderer is used on.
+            context: Every keyword argument the route received.
+            request: The request being served.
+
+        Returns:
+            An async generator that yields HTML string chunks.
+        """
+        ...
 
 
 @runtime_checkable

@@ -1,5 +1,5 @@
 from collections.abc import Callable, Collection, Coroutine, Iterable
-from dataclasses import dataclass, field
+from dataclasses import KW_ONLY, dataclass
 from functools import lru_cache
 from typing import Any, Protocol
 
@@ -237,7 +237,9 @@ class Jinja:
     a Jinja rendering context. The default value is `JinjaContext.unpack_result`.
     """
 
-    no_data: bool = field(default=False, kw_only=True)
+    _: KW_ONLY
+
+    no_data: bool = False
     """
     If set, `hx()` routes will only accept HTMX requests.
 
@@ -271,15 +273,16 @@ class Jinja:
             # No route-specific override.
             make_context = self.make_context
 
-        return hx(
-            self._make_render_function(template, make_context=make_context, prefix=prefix),
-            render_error=None
+        render_func = self._make_render_function(template, make_context=make_context, prefix=prefix)
+        error_render_func = (
+            None
             if error_template is None
             else self._make_render_function(
                 error_template, make_context=make_context, prefix=prefix, error_renderer=True
-            ),
-            no_data=self.no_data or no_data,
+            )
         )
+        # TODO: check why mypy doesn't resolve the generics correctly.
+        return hx(render_func, render_error=error_render_func, no_data=self.no_data or no_data)  # type: ignore[return-value]
 
     def page(
         self,
@@ -304,14 +307,19 @@ class Jinja:
             # No route-specific override.
             make_context = self.make_context
 
-        return page(
-            self._make_render_function(template, make_context=make_context, prefix=prefix),
-            render_error=None
+        render_func = self._make_render_function(template, make_context=make_context, prefix=prefix)
+        error_render_func = (
+            None
             if error_template is None
             else self._make_render_function(
-                error_template, make_context=make_context, prefix=prefix, error_renderer=True
-            ),
+                error_template,
+                make_context=make_context,
+                prefix=prefix,
+                error_renderer=True,
+            )
         )
+        # TODO: check why mypy doesn't resolve the generics correctly.
+        return page(render_func, render_error=error_render_func)  # type: ignore[return-value]
 
     def _make_render_function(
         self,

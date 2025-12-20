@@ -1,22 +1,49 @@
 import inspect
-from collections.abc import Callable
+from collections.abc import AsyncIterable, Callable
 from functools import wraps
-from typing import Coroutine
+from typing import Coroutine, Literal, TypeAlias, cast, overload
 
 from fastapi import HTTPException, Response, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 from .dependencies import DependsHXRequest, DependsPageRequest
-from .typing import MaybeAsyncFunc, P, RenderFunction, T
+from .typing import MaybeAsyncFunc, P, RenderFunction, StreamingRenderFunction, T
 from .utils import append_to_signature, execute_maybe_sync_func, get_response
 
+# -- Rendering decorators
 
+HXReturnType: TypeAlias = Callable[
+    [MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]
+]
+
+
+@overload
+def hx(
+    render: StreamingRenderFunction[T],
+    *,
+    no_data: bool = False,
+    render_error: StreamingRenderFunction[Exception] | None = None,
+    stream: Literal[True],
+) -> HXReturnType[P, T]: ...
+
+
+@overload
 def hx(
     render: RenderFunction[T],
     *,
     no_data: bool = False,
     render_error: RenderFunction[Exception] | None = None,
-) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
+    stream: Literal[False] = False,
+) -> HXReturnType[P, T]: ...
+
+
+def hx(
+    render: RenderFunction[T] | StreamingRenderFunction[T],
+    *,
+    no_data: bool = False,
+    render_error: RenderFunction[Exception] | StreamingRenderFunction[Exception] | None = None,
+    stream: bool = False,
+) -> HXReturnType[P, T]:
     """
     Decorator that converts a FastAPI route's return value into HTML if the request was
     an HTMX one.
@@ -26,6 +53,8 @@ def hx(
         no_data: If set, the route will only accept HTMX requests.
         render_error: Optional render function for handling exceptions raised by the decorated route.
             If not `None`, it is expected to raise an error if the exception can not be rendered.
+        stream: If set, the route will stream the response. `render` (and `render_error` if not `None`)
+            must be a `StreamingRenderFunction` in that case.
 
     Returns:
         The rendered HTML for HTMX requests, otherwise the route's unchanged return value.
@@ -59,16 +88,33 @@ def hx(
                 return result
 
             response = get_response(kwargs)
-            rendered = await execute_maybe_sync_func(renderer, result, context=kwargs, request=__hx_request)
+            if stream:
+                renderer = cast(StreamingRenderFunction[T | Exception], renderer)
+                stream_source: AsyncIterable[str] = renderer(result, context=kwargs, request=__hx_request)
 
-            return HTMLResponse(
-                rendered,
-                # The default status code of the FastAPI Response dependency is None
-                # (not allowed by the typing but required for FastAPI).
-                status_code=getattr(response, "status_code", 200) or 200,
-                headers=getattr(response, "headers", None),
-                background=getattr(response, "background", None),
-            )
+                return StreamingResponse(
+                    stream_source,
+                    # The default status code of the FastAPI Response dependency is None
+                    # (not allowed by the typing but required for FastAPI).
+                    status_code=getattr(response, "status_code", 200) or 200,
+                    headers=getattr(response, "headers", None),
+                    media_type="text/html",
+                    background=getattr(response, "background", None),
+                )
+            else:
+                renderer = cast(RenderFunction[T | Exception], renderer)
+                rendered: str = await execute_maybe_sync_func(
+                    renderer, result, context=kwargs, request=__hx_request
+                )
+
+                return HTMLResponse(
+                    rendered,
+                    # The default status code of the FastAPI Response dependency is None
+                    # (not allowed by the typing but required for FastAPI).
+                    status_code=getattr(response, "status_code", 200) or 200,
+                    headers=getattr(response, "headers", None),
+                    background=getattr(response, "background", None),
+                )
 
         return append_to_signature(
             wrapper,  # type: ignore[arg-type]
@@ -82,11 +128,35 @@ def hx(
     return decorator
 
 
+PageReturnType: TypeAlias = Callable[
+    [MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, Response]]
+]
+
+
+@overload
+def page(
+    render: StreamingRenderFunction[T],
+    *,
+    render_error: StreamingRenderFunction[Exception] | None = None,
+    stream: Literal[True],
+) -> PageReturnType[P, T]: ...
+
+
+@overload
 def page(
     render: RenderFunction[T],
     *,
     render_error: RenderFunction[Exception] | None = None,
-) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, Response]]]:
+    stream: Literal[False] = False,
+) -> PageReturnType[P, T]: ...
+
+
+def page(
+    render: RenderFunction[T] | StreamingRenderFunction[T],
+    *,
+    render_error: RenderFunction[Exception] | StreamingRenderFunction[Exception] | None = None,
+    stream: bool = False,
+) -> PageReturnType[P, T]:
     """
     Decorator that converts a FastAPI route's return value into HTML.
 
@@ -94,6 +164,8 @@ def page(
         render: The render function converting the route's return value to HTML.
         render_error: Optional render function for handling exceptions raised by the decorated route.
             If not `None`, it is expected to raise an error if the exception can not be rendered.
+        stream: If set, the route will stream the response. `render` (and `render_error` if not `None`)
+            must be a `StreamingRenderFunction` in that case.
     """
 
     def decorator(func: MaybeAsyncFunc[P, T | Response]) -> Callable[P, Coroutine[None, None, Response]]:
@@ -115,18 +187,34 @@ def page(
                 return result
 
             response = get_response(kwargs)
-            rendered = await execute_maybe_sync_func(
-                renderer, result, context=kwargs, request=__page_request
-            )
 
-            return HTMLResponse(
-                rendered,
-                # The default status code of the FastAPI Response dependency is None
-                # (not allowed by the typing but required for FastAPI).
-                status_code=getattr(response, "status_code", 200) or 200,
-                headers=getattr(response, "headers", None),
-                background=getattr(response, "background", None),
-            )
+            if stream:
+                renderer = cast(StreamingRenderFunction[T | Exception], renderer)
+                stream_source = renderer(result, context=kwargs, request=__page_request)
+
+                return StreamingResponse(
+                    stream_source,
+                    # The default status code of the FastAPI Response dependency is None
+                    # (not allowed by the typing but required for FastAPI).
+                    status_code=getattr(response, "status_code", 200) or 200,
+                    headers=getattr(response, "headers", None),
+                    media_type="text/html",
+                    background=getattr(response, "background", None),
+                )
+            else:
+                renderer = cast(RenderFunction[T | Exception], renderer)
+                rendered = await execute_maybe_sync_func(
+                    renderer, result, context=kwargs, request=__page_request
+                )
+
+                return HTMLResponse(
+                    rendered,
+                    # The default status code of the FastAPI Response dependency is None
+                    # (not allowed by the typing but required for FastAPI).
+                    status_code=getattr(response, "status_code", 200) or 200,
+                    headers=getattr(response, "headers", None),
+                    background=getattr(response, "background", None),
+                )
 
         return append_to_signature(
             wrapper,  # type: ignore[arg-type]
