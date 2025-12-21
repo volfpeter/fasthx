@@ -14,7 +14,7 @@ jinja = ["jinja2>=3.0.0,<4"]
 
 [dependency-groups]
 dev = [
-    "htmy[lxml]>=0.8.1",
+    "htmy[lxml]>=0.10.1",
     "httpx>=0.26.0",
     "jinja2>=3.0.0,<4",
     "mkdocstrings[python]>=0.30.0",
