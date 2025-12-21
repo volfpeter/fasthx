@@ -53,7 +53,7 @@ RenderFunction: TypeAlias = SyncRenderFunction[Tcontra] | AsyncRenderFunction[Tc
 
 
 class StreamingRenderFunction(Protocol[Tcontra]):
-    """Streaming render function definition that yields HTML chunks."""
+    """Streaming render function definition that produces a content stream."""
 
     def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> ContentStream:
         """
