@@ -1,7 +1,12 @@
-from collections.abc import Callable, Coroutine
-from typing import Any, ParamSpec, Protocol, TypeAlias, TypeVar, runtime_checkable
+from __future__ import annotations
 
-from fastapi import Request
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any, ParamSpec, Protocol, TypeAlias, TypeVar, runtime_checkable
+
+if TYPE_CHECKING:
+    from fastapi import Request
+    from starlette.responses import ContentStream
+
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -45,6 +50,22 @@ class AsyncRenderFunction(Protocol[Tcontra]):
 
 RenderFunction: TypeAlias = SyncRenderFunction[Tcontra] | AsyncRenderFunction[Tcontra]
 """Sync or async render function type."""
+
+
+class StreamingRenderFunction(Protocol[Tcontra]):
+    """Streaming render function definition that produces a content stream."""
+
+    def __call__(self, result: Tcontra, *, context: dict[str, Any], request: Request) -> ContentStream:
+        """
+        Arguments:
+            result: The result of the route the renderer is used on.
+            context: Every keyword argument the route received.
+            request: The request being served.
+
+        Returns:
+            An async generator that yields HTML string chunks.
+        """
+        ...
 
 
 @runtime_checkable

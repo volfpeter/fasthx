@@ -2,6 +2,7 @@ import pytest
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from htmy import StreamingRenderer
 
 from fasthx.htmy import HTMY, ComponentHeader
 
@@ -23,12 +24,15 @@ billy_html_span = "<span >Billy Shears (active=True)</span>"
 user_list_html = "<ul >\n<li >Billy Shears (active=True)</li>\n<li >Lucy (active=True)</li>\n</ul>"
 
 
-@pytest.fixture
-def htmy_app() -> FastAPI:  # noqa: C901
+def make_test_app(*, stream: bool) -> FastAPI:  # noqa: C901
     app = FastAPI()
 
-    htmy = HTMY(request_processors=RequestProcessors.all())
-    no_data_htmy = HTMY(no_data=True)
+    htmy = (
+        HTMY(StreamingRenderer(), request_processors=RequestProcessors.all(), stream=True)
+        if stream
+        else HTMY(request_processors=RequestProcessors.all())
+    )
+    no_data_htmy = HTMY(StreamingRenderer(), no_data=True, stream=True) if stream else HTMY(no_data=True)
     no_data_htmy.request_processors.extend(RequestProcessors.all())
 
     @app.get("/")
@@ -137,13 +141,20 @@ def htmy_app() -> FastAPI:  # noqa: C901
     return app
 
 
-@pytest.fixture
-def htmy_client(htmy_app: FastAPI) -> TestClient:
+def client(*, stream: bool) -> TestClient:
+    app = make_test_app(stream=stream)
     # raise_server_exception must be disabled. Without it, unhandled server
     # errors would result in an exception instead of a HTTP 500 response.
-    return TestClient(htmy_app, raise_server_exceptions=False)
+    return TestClient(app, raise_server_exceptions=False)
 
 
+@pytest.mark.parametrize(
+    "client",
+    (
+        client(stream=True),
+        client(stream=False),
+    ),
+)
 @pytest.mark.parametrize(
     ("route", "headers", "status", "expected", "response_headers"),
     (
@@ -215,14 +226,14 @@ def htmy_client(htmy_app: FastAPI) -> TestClient:
     ),
 )
 def test_htmy(
-    htmy_client: TestClient,
+    client: TestClient,
     route: str,
     headers: dict[str, str] | None,
     status: int,
     expected: str,
     response_headers: dict[str, str],
 ) -> None:
-    response = htmy_client.get(route, headers=headers)
+    response = client.get(route, headers=headers)
     assert response.status_code == status
     if status >= 400:
         return
