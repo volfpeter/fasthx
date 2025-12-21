@@ -1,5 +1,5 @@
 import inspect
-from collections.abc import AsyncIterable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Literal, TypeAlias, cast, overload
 
@@ -90,10 +90,10 @@ def hx(
             response = get_response(kwargs)
             if stream:
                 renderer = cast(StreamingRenderFunction[T | Exception], renderer)
-                stream_source: AsyncIterable[str] = renderer(result, context=kwargs, request=__hx_request)
+                content_stream = renderer(result, context=kwargs, request=__hx_request)
 
                 return StreamingResponse(
-                    stream_source,
+                    content_stream,
                     # The default status code of the FastAPI Response dependency is None
                     # (not allowed by the typing but required for FastAPI).
                     status_code=getattr(response, "status_code", 200) or 200,
@@ -190,10 +190,10 @@ def page(
 
             if stream:
                 renderer = cast(StreamingRenderFunction[T | Exception], renderer)
-                stream_source = renderer(result, context=kwargs, request=__page_request)
+                content_stream = renderer(result, context=kwargs, request=__page_request)
 
                 return StreamingResponse(
-                    stream_source,
+                    content_stream,
                     # The default status code of the FastAPI Response dependency is None
                     # (not allowed by the typing but required for FastAPI).
                     status_code=getattr(response, "status_code", 200) or 200,
