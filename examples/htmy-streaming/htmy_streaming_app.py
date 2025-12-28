@@ -9,7 +9,7 @@ from fasthx.htmy import HTMY
 
 
 @component
-async def list_item(value: ComponentType, _: Context) -> ComponentType:
+async def slow_list_item(value: ComponentType, _: Context) -> ComponentType:
     """Async list item component that takes 1 second to resolve."""
     await asyncio.sleep(1)
     return html.li(value)
@@ -34,7 +34,7 @@ def index_page(_: None) -> Component:
                 ),
                 html.ol(
                     # Render a number of async list items.
-                    *(list_item(f"Item {i}") for i in range(1, 33)),
+                    *(slow_list_item(f"Item {i}") for i in range(1, 33)),
                 ),
                 class_="container",
             ),

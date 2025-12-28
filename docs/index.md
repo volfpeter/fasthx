@@ -18,6 +18,7 @@ For an even deeper FastAPI integration and a Next.js-like developer experience, 
 - **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
 - Built for **HTMX**, but can be used without it.
 - Works with **any templating engine** or server-side rendering library, e.g. `htmy`, `jinja2`, or `dominate`.
+- Supports async **HTML streaming** for optimal time to first byte and contentful paint.
 - Gives the rendering engine **access to all dependencies** of the decorated route.
 - HTMX **routes work as expected** if they receive non-HTMX requests, so the same route can serve data and render HTML at the same time.
 - **Response headers** you set in your routes are kept after rendering, as you would expect in FastAPI.
@@ -26,11 +27,11 @@ For an even deeper FastAPI integration and a Next.js-like developer experience, 
 
 ## Testimonials
 
-"Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77))
+"Thanks for your work in the `holm`/`htmy`/`FastHX` stack, it's awesome." (David Brochart, Technical Director at QuantStack, Jupyter developer. [ref](https://github.com/volfpeter/holm/issues/41#issuecomment-3682810002))
 
-"One of the main parts of the `FastAPI` -> `fasthx` -> `htmy` integration I'm falling in love with is its explicitness, and not too much magic happening." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+"Thank you for your work on `fasthx`, as well as `htmy`! I've never had an easier time developing with another stack." ([ref](https://github.com/volfpeter/fasthx/discussions/77#discussion-8539821))
 
-"Thank you for your work on `htmy` and `fasthx`, both have been very pleasant to use, and the APIs are both intuitive and simple. Great work." ([ref](https://github.com/volfpeter/fasthx/issues/54))
+"Thank you for your work on `htmy` and `fasthx`, both have been very pleasant to use, and the APIs are both intuitive and simple. Great work." ([ref](https://github.com/volfpeter/fasthx/issues/54#issue-2854012392))
 
 ## Support
 
