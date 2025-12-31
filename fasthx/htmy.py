@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable
 from dataclasses import KW_ONLY, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeAlias, overload
 
-from fastapi import Request, Response
+from fastapi import Request
 from htmy import Component, Context, Renderer
 from htmy.renderer import is_streaming_renderer
 
@@ -17,7 +17,8 @@ if TYPE_CHECKING:
     from htmy.renderer.typing import RendererType, StreamingRendererType
     from typing_extensions import Self
 
-    from .typing import MaybeAsyncFunc, P, RenderFunction, StreamingRenderFunction
+    from .core_decorators import HXReturnType, PageReturnType
+    from .typing import P, RenderFunction, StreamingRenderFunction
 
 RequestProcessor: TypeAlias = Callable[[Request], Context]
 HTMYComponentFactory: TypeAlias = Callable[[T], Component]
@@ -149,7 +150,7 @@ class HTMY:
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         no_data: bool = False,
         stream: bool | None = None,
-    ) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
+    ) -> HXReturnType[P, T]:
         """
         Decorator for rendering the route's result if the request was an HTMX one.
 
@@ -199,7 +200,7 @@ class HTMY:
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         stream: bool | None = None,
-    ) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
+    ) -> PageReturnType[P, T]:
         """
         Decorator for rendering a route's result.
 
