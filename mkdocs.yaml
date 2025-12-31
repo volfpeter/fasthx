@@ -52,6 +52,7 @@ nav:
   - Examples:
       - Examples: examples/index.md
       - examples/htmy.md
+      - examples/htmy-streaming.md
       - examples/jinja-templating.md
       - examples/custom-templating.md
   - API Reference:

@@ -18,7 +18,7 @@ For an even deeper FastAPI integration and a Next.js-like developer experience, 
 - **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
 - Built for **HTMX**, but can be used without it.
 - Works with **any templating engine** or server-side rendering library, e.g. `htmy`, `jinja2`, or `dominate`.
-- Supports async **HTML streaming** for optimal time to first byte and contentful paint.
+- Supports async **HTML streaming** for optimal time to first byte and first contentful paint.
 - Gives the rendering engine **access to all dependencies** of the decorated route.
 - HTMX **routes work as expected** if they receive non-HTMX requests, so the same route can serve data and render HTML at the same time.
 - **Response headers** you set in your routes are kept after rendering, as you would expect in FastAPI.
