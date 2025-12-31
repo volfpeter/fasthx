@@ -37,7 +37,7 @@ async def slow_list_item(value: ComponentType, _: Context) -> ComponentType:
     return html.li(value)
 ```
 
-In this example we don't create a dedicated page component. Instead, the FastAPI route simply returns the `htmy` components for the `@htmy.page()` decorator to render. This means we now everything in place, except the FastAPI route itself:
+In this example we don't create a dedicated page component. Instead, the FastAPI route simply returns the `htmy` components for the `@htmy.page()` decorator to render. This means we now have everything in place, except the FastAPI route itself:
 
 ```python hl_lines="2 13 21-24"
 @app.get("/")
