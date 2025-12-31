@@ -8,8 +8,15 @@ from fastapi.concurrency import run_in_threadpool
 
 from .typing import MaybeAsyncFunc, P, T
 
+_default = object()
+"""Safe default value placeholder."""
 
-def append_to_signature(func: Callable[P, T], *params: inspect.Parameter) -> Callable[P, T]:
+
+def append_to_signature(
+    func: Callable[P, T],
+    *params: inspect.Parameter,
+    return_annotation: Any = _default,
+) -> Callable[P, T]:
     """
     Appends the given parameters to the *end* of the signature of the given function.
 
@@ -23,12 +30,19 @@ def append_to_signature(func: Callable[P, T], *params: inspect.Parameter) -> Cal
     Arguments:
         func: The function whose signature should be extended.
         params: The parameters to add to the function's signature.
+        return_annotation: If set, the return annotation of `func` will be replaced
+            with the given value.
 
     Returns:
         The received function with an extended `__signature__`.
     """
     signature = inspect.signature(func, eval_str=True)
-    func.__signature__ = signature.replace(parameters=(*signature.parameters.values(), *params))  # type: ignore[attr-defined]
+    func.__signature__ = signature.replace(  # type: ignore[attr-defined]
+        parameters=(*signature.parameters.values(), *params),
+        return_annotation=signature.return_annotation
+        if return_annotation is _default
+        else return_annotation,
+    )
     return func
 
 

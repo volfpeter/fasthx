@@ -223,6 +223,10 @@ def page(
                 inspect.Parameter.KEYWORD_ONLY,
                 annotation=DependsPageRequest,
             ),
+            # Override the return annotation to Response to prevent FastAPI from
+            # trying to resolve the return type, it will be converted to a Response
+            # object anyway.
+            return_annotation=Response,
         )
 
     return decorator
