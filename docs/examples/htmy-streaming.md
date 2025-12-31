@@ -41,7 +41,7 @@ In this example we don't create a dedicated page component. Instead, the FastAPI
 
 ```python hl_lines="2 13 21-24"
 @app.get("/")
-@htmy.page()
+@htmy.page()  # type: ignore[arg-type]
 def index() -> Component:
     """The index page route."""
     return (
