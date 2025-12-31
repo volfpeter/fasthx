@@ -1,23 +1,27 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, TypeAlias
+from collections.abc import AsyncIterator, Callable
+from dataclasses import KW_ONLY, dataclass, field
+from typing import TYPE_CHECKING, Any, TypeAlias, overload
 
-import htmy as h
-from fastapi import Request, Response
+from fastapi import Request
+from htmy import Component, Context, Renderer
+from htmy.renderer import is_streaming_renderer
 
 from .component_selectors import ComponentHeader as _ComponentHeader
 from .core_decorators import hx, page
-from .typing import ComponentSelector, MaybeAsyncFunc, P, RenderFunction, RequestComponentSelector, T
+from .typing import ComponentSelector, RequestComponentSelector, T
 
 if TYPE_CHECKING:
+    from htmy import MutableContext
+    from htmy.renderer.typing import RendererType, StreamingRendererType
     from typing_extensions import Self
-else:
-    Self: TypeAlias = Any  # type: ignore[no-redef]
 
-RequestProcessor: TypeAlias = Callable[[Request], h.Context]
-HTMYComponentFactory: TypeAlias = Callable[[T], h.Component]
+    from .core_decorators import HXReturnType, PageReturnType
+    from .typing import P, RenderFunction, StreamingRenderFunction
+
+RequestProcessor: TypeAlias = Callable[[Request], Context]
+HTMYComponentFactory: TypeAlias = Callable[[T], Component]
 HTMYComponentSelector: TypeAlias = ComponentSelector[HTMYComponentFactory[T]]
 
 
@@ -36,12 +40,12 @@ class CurrentRequest:
     """
 
     @classmethod
-    def to_context(cls, request: Request) -> h.MutableContext:
+    def to_context(cls, request: Request) -> MutableContext:
         """Creates an `htmy` `Context` for the given request."""
         return {Request: request}
 
     @classmethod
-    def from_context(cls, context: h.Context) -> Request:
+    def from_context(cls, context: Context) -> Request:
         """
         Loads the current `Request` instance from the given context.
 
@@ -81,12 +85,12 @@ class RouteParams:
         """Returns the parameter with the given key."""
         return self.params.get(key, default)
 
-    def to_context(self) -> h.MutableContext:
+    def to_context(self) -> MutableContext:
         """Creates an `htmy` `Context` for this instance."""
         return {RouteParams: self}
 
     @classmethod
-    def from_context(cls, context: h.Context) -> Self:
+    def from_context(cls, context: Context) -> Self:
         """
         Loads the `RouteParams` instance from the given context.
 
@@ -115,10 +119,12 @@ class HTMY:
     - The default context of `self.renderer`.
     """
 
-    renderer: h.RendererType = field(default_factory=h.Renderer)
+    renderer: RendererType = field(default_factory=Renderer)
     """The HTMY renderer to use."""
 
-    no_data: bool = field(default=False, kw_only=True)
+    _: KW_ONLY
+
+    no_data: bool = False
     """
     If set, `hx()` routes will only accept HTMX requests.
 
@@ -126,10 +132,15 @@ class HTMY:
     will have no effect.
     """
 
-    request_processors: list[RequestProcessor] = field(default_factory=list, kw_only=True)
+    request_processors: list[RequestProcessor] = field(default_factory=list)
     """
     A list of functions that expect the current request and return an `htmy` `Context` that should
     be used during rendering in addition to the default context of `self.renderer`.
+    """
+
+    stream: bool = True
+    """
+    If set, the response will be streamed if the renderer supports it.
     """
 
     def hx(
@@ -138,7 +149,8 @@ class HTMY:
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         no_data: bool = False,
-    ) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
+        stream: bool | None = None,
+    ) -> HXReturnType[P, T]:
         """
         Decorator for rendering the route's result if the request was an HTMX one.
 
@@ -147,23 +159,48 @@ class HTMY:
                 assumed the route returns a component that should be rendered as is.
             error_component_selector: The component selector to use for route error rendering.
             no_data: If set, the route will only accept HTMX requests.
+            stream: If set, overrides the class-level `stream` setting for this decorator.
         """
-        return hx(
-            self._make_render_function(
-                _default_component_selector if component_selector is None else component_selector
-            ),
-            render_error=None
-            if error_component_selector is None
-            else self._make_error_render_function(error_component_selector),
-            no_data=self.no_data or no_data,
-        )
+        selector = _default_component_selector if component_selector is None else component_selector
+        should_stream = self.stream if stream is None else stream
+
+        if should_stream and is_streaming_renderer(self.renderer):
+            return hx(
+                self._make_render_function(
+                    selector,
+                    streaming_renderer=self.renderer,
+                ),
+                render_error=None
+                if error_component_selector is None
+                else self._make_error_render_function(
+                    error_component_selector,
+                    streaming_renderer=self.renderer,
+                ),
+                no_data=self.no_data or no_data,
+                stream=True,
+            )
+        else:
+            return hx(
+                self._make_render_function(
+                    selector,
+                    renderer=self.renderer,
+                ),
+                render_error=None
+                if error_component_selector is None
+                else self._make_error_render_function(
+                    error_component_selector,
+                    renderer=self.renderer,
+                ),
+                no_data=self.no_data or no_data,
+            )
 
     def page(
         self,
         component_selector: HTMYComponentSelector[T] | None = None,
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
-    ) -> Callable[[MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]]:
+        stream: bool | None = None,
+    ) -> PageReturnType[P, T]:
         """
         Decorator for rendering a route's result.
 
@@ -173,17 +210,40 @@ class HTMY:
             component_selector: An optional component selector to use. If not provided, it is
                 assumed the route returns a component that should be rendered as is.
             error_component_selector: The component selector to use for route error rendering.
+            stream: If set, overrides the class-level `stream` setting for this decorator.
         """
-        return page(
-            self._make_render_function(
-                _default_component_selector if component_selector is None else component_selector
-            ),
-            render_error=None
-            if error_component_selector is None
-            else self._make_error_render_function(error_component_selector),
-        )
+        selector = _default_component_selector if component_selector is None else component_selector
+        should_stream = self.stream if stream is None else stream
 
-    async def render_component(self, component: h.Component, request: Request) -> str:
+        if should_stream and is_streaming_renderer(self.renderer):
+            return page(
+                self._make_render_function(
+                    selector,
+                    streaming_renderer=self.renderer,
+                ),
+                render_error=None
+                if error_component_selector is None
+                else self._make_error_render_function(
+                    error_component_selector,
+                    streaming_renderer=self.renderer,
+                ),
+                stream=True,
+            )
+        else:
+            return page(
+                self._make_render_function(
+                    selector,
+                    renderer=self.renderer,
+                ),
+                render_error=None
+                if error_component_selector is None
+                else self._make_error_render_function(
+                    error_component_selector,
+                    renderer=self.renderer,
+                ),
+            )
+
+    async def render_component(self, component: Component, request: Request) -> str:
         """
         Renders the given component.
 
@@ -203,43 +263,145 @@ class HTMY:
         """
         return await self.renderer.render(component, self._make_render_context(request, {}))
 
-    def _make_render_function(self, component_selector: HTMYComponentSelector[T]) -> RenderFunction[T]:
+    @overload
+    def _make_render_function(
+        self,
+        component_selector: HTMYComponentSelector[T],
+        *,
+        renderer: None = None,
+        streaming_renderer: StreamingRendererType,
+    ) -> StreamingRenderFunction[T]: ...
+
+    @overload
+    def _make_render_function(
+        self,
+        component_selector: HTMYComponentSelector[T],
+        *,
+        renderer: RendererType,
+        streaming_renderer: None = None,
+    ) -> RenderFunction[T]: ...
+
+    def _make_render_function(
+        self,
+        component_selector: HTMYComponentSelector[T],
+        *,
+        renderer: RendererType | None = None,
+        streaming_renderer: StreamingRendererType | None = None,
+    ) -> RenderFunction[T] | StreamingRenderFunction[T]:
         """
         Creates a render function that uses the given component selector.
+
+        Arguments:
+            component_selector: The component selector to use.
+            renderer: The renderer to use for non-streaming rendering. Must be `None` if
+                `streaming_renderer` is provided.
+            streaming_renderer: The streaming renderer to use for streaming rendering. Must be
+                `None` if `renderer` is provided.
+
+        Returns:
+            A render function (streaming or non-streaming based on which renderer is provided).
         """
+        if streaming_renderer is not None:
+            # This function must be sync and execute the component selector before returning
+            # the async iterator, otherwise the component selector would only be executed as
+            # part of the async iterator, so during response streaming.
+            def streaming_render(
+                result: T, *, context: dict[str, Any], request: Request
+            ) -> AsyncIterator[str]:
+                component = (
+                    component_selector.get_component(request, None)
+                    if isinstance(component_selector, RequestComponentSelector)
+                    else component_selector
+                )
+                return streaming_renderer.stream(
+                    component(result), self._make_render_context(request, context)
+                )
 
-        async def render(result: T, *, context: dict[str, Any], request: Request) -> str:
-            component = (
-                component_selector.get_component(request, None)
-                if isinstance(component_selector, RequestComponentSelector)
-                else component_selector
-            )
-            return await self.renderer.render(
-                component(result), self._make_render_context(request, context)
-            )
+            return streaming_render
+        elif renderer is not None:
 
-        return render
+            async def render(result: T, *, context: dict[str, Any], request: Request) -> str:
+                component = (
+                    component_selector.get_component(request, None)
+                    if isinstance(component_selector, RequestComponentSelector)
+                    else component_selector
+                )
+                return await renderer.render(component(result), self._make_render_context(request, context))
+
+            return render
+        else:
+            raise ValueError("No renderer provided.")
+
+    @overload
+    def _make_error_render_function(
+        self,
+        component_selector: HTMYComponentSelector[Exception],
+        *,
+        renderer: None = None,
+        streaming_renderer: StreamingRendererType,
+    ) -> StreamingRenderFunction[Exception]: ...
+
+    @overload
+    def _make_error_render_function(
+        self,
+        component_selector: HTMYComponentSelector[Exception],
+        *,
+        renderer: RendererType,
+        streaming_renderer: None = None,
+    ) -> RenderFunction[Exception]: ...
 
     def _make_error_render_function(
-        self, component_selector: HTMYComponentSelector[Exception]
-    ) -> RenderFunction[Exception]:
+        self,
+        component_selector: HTMYComponentSelector[Exception],
+        *,
+        renderer: RendererType | None = None,
+        streaming_renderer: StreamingRendererType | None = None,
+    ) -> RenderFunction[Exception] | StreamingRenderFunction[Exception]:
         """
         Creates an error renderer function that uses the given component selector.
+
+        Arguments:
+            component_selector: The component selector to use for error rendering.
+            renderer: The renderer to use for non-streaming rendering. Must be `None` if
+                `streaming_renderer` is provided.
+            streaming_renderer: The streaming renderer to use for streaming rendering. Must be
+                `None` if `renderer` is provided.
+
+        Returns:
+            An error render function (streaming or non-streaming based on which renderer is provided).
         """
+        if streaming_renderer is not None:
+            # This function must be sync and execute the component selector before returning
+            # the async iterator, otherwise the component selector would only be executed as
+            # part of the async iterator, so during response streaming.
+            def streaming_render(
+                result: Exception, *, context: dict[str, Any], request: Request
+            ) -> AsyncIterator[str]:
+                component = (
+                    component_selector.get_component(request, result)
+                    if isinstance(component_selector, RequestComponentSelector)
+                    else component_selector
+                )
+                return streaming_renderer.stream(
+                    component(result), self._make_render_context(request, context)
+                )
 
-        async def render(result: Exception, *, context: dict[str, Any], request: Request) -> str:
-            component = (
-                component_selector.get_component(request, result)
-                if isinstance(component_selector, RequestComponentSelector)
-                else component_selector
-            )
-            return await self.renderer.render(
-                component(result), self._make_render_context(request, context)
-            )
+            return streaming_render
+        elif renderer is not None:
 
-        return render
+            async def render(result: Exception, *, context: dict[str, Any], request: Request) -> str:
+                component = (
+                    component_selector.get_component(request, result)
+                    if isinstance(component_selector, RequestComponentSelector)
+                    else component_selector
+                )
+                return await renderer.render(component(result), self._make_render_context(request, context))
 
-    def _make_render_context(self, request: Request, route_params: dict[str, Any]) -> h.Context:
+            return render
+        else:
+            raise ValueError("No renderer provided.")
+
+    def _make_render_context(self, request: Request, route_params: dict[str, Any]) -> Context:
         """
         Creates the `htmy` rendering context for the given request and route parameters.
 
@@ -263,7 +425,7 @@ class HTMY:
         return result
 
 
-def _default_component_selector(route_result: Any) -> h.Component:
+def _default_component_selector(route_result: Any) -> Component:
     """
     Default component selector that returns the route result as is.
 

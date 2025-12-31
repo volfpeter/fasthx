@@ -9,12 +9,12 @@ requires-python = ">=3.10"
 dependencies = ["fastapi>=0.100.0"]
 
 [project.optional-dependencies]
-htmy = ["htmy[lxml]>=0.8.1"]
+htmy = ["htmy[lxml]>=0.10.1"]
 jinja = ["jinja2>=3.0.0,<4"]
 
 [dependency-groups]
 dev = [
-    "htmy[lxml]>=0.8.1",
+    "htmy[lxml]>=0.10.1",
     "httpx>=0.26.0",
     "jinja2>=3.0.0,<4",
     "mkdocstrings[python]>=0.30.0",
