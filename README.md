@@ -7,9 +7,9 @@
 
 **Documentation and examples**: [https://volfpeter.github.io/fasthx](https://volfpeter.github.io/fasthx/)
 
-# FastHX
+# FastHX - Python, FastAPI, and HTMX
 
-FastAPI server-side rendering with built-in HTMX support.
+Python FastAPI server-side rendering with built-in HTMX support.
 
 For an even deeper FastAPI integration and a Next.js-like developer experience, you should check out [holm](https://volfpeter.github.io/holm/).
 
