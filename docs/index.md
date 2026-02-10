@@ -9,15 +9,17 @@
 
 # FastHX
 
-FastAPI server-side rendering with built-in HTMX support.
+Python server-side rendering library for FastAPI with built-in HTMX support.
+
+FastHX simplifies building interactive web applications with FastAPI and hypermedia frameworks like HTMX.
 
 For an even deeper FastAPI integration and a Next.js-like developer experience, you should check out [holm](https://volfpeter.github.io/holm/).
 
 ## Key features
 
-- **Decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
+- **Python decorator syntax** that works with FastAPI as one would expect, no need for unused or magic dependencies in routes.
 - Built for **HTMX**, but can be used without it.
-- Works with **any templating engine** or server-side rendering library, e.g. `htmy`, `jinja2`, or `dominate`.
+- Works with **any Python templating engine** or server-side rendering library, e.g. `htmy`, `jinja2`, or `dominate`.
 - Supports async **HTML streaming** for optimal time to first byte and first contentful paint.
 - Gives the rendering engine **access to all dependencies** of the decorated route.
 - HTMX **routes work as expected** if they receive non-HTMX requests, so the same route can serve data and render HTML at the same time.
