@@ -21,6 +21,11 @@ For an even deeper FastAPI integration and a Next.js-like developer experience, 
 - Built for **HTMX**, but can be used without it.
 - Works with **any Python templating engine** or server-side rendering library, e.g. `htmy`, `jinja2`, or `dominate`.
 - Supports async **HTML streaming** for optimal time to first byte and first contentful paint.
+- Gives the rendering engine **access to all dependencies** of the decorated route.
+- HTMX **routes work as expected** if they receive non-HTMX requests, so the same route can serve data and render HTML at the same time.
+- **Response headers** you set in your routes are kept after rendering, as you would expect in FastAPI.
+- **Correct typing** makes it possible to apply other (typed) decorators to your routes.
+- Works with both **sync** and **async routes**.
 
 ## Testimonials
 
