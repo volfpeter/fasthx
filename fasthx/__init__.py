@@ -1,4 +1,4 @@
-__version__ = "3.1.0"
+__version__ = "3.2.0"
 
 from .component_selectors import ComponentHeader as ComponentHeader
 from .core_decorators import hx as hx
