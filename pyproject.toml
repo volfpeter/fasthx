@@ -5,27 +5,31 @@ description = "FastAPI server-side rendering with built-in HTMX support."
 authors = [{ name = "Peter Volf", email = "do.volfp@gmail.com" }]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = ["fastapi>=0.100.0"]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.135.0",
+    "htmy>=0.12.1",
+]
 
 [project.optional-dependencies]
-htmy = ["htmy[lxml]>=0.10.1"]
+htmy = ["htmy[lxml]>=0.12.1"]
 jinja = ["jinja2>=3.0.0,<4"]
+all = ["fasthx[htmy,jinja]"]
 
 [dependency-groups]
 dev = [
-    "htmy[lxml]>=0.10.1",
+    "htmy[all]>=0.12.1",
     "httpx>=0.26.0",
     "jinja2>=3.0.0,<4",
-    "mkdocstrings[python]>=0.30.0",
-    "mypy>=1.17.0",
-    "poethepoet>=0.38.0",
+    "mkdocstrings[python]>=1.0.4",
+    "mypy>=2.1.0",
+    "poethepoet>=0.46.0",
     "pytest>=9.0.2",
     "pytest-random-order>=1.2.0",
-    "ruff>=0.14.8,<0.15",
-    "typing-extensions>=4.5.0",
-    "uvicorn>=0.35.0",
-    "zensical>=0.0.11",
+    "ruff>=0.15.17,<0.16",
+    "typing-extensions>=4.12.0",
+    "uvicorn>=0.50.0",
+    "zensical>=0.0.45",
 ]
 
 [build-system]
