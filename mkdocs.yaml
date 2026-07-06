@@ -3,7 +3,6 @@ repo_name: volfpeter/fasthx
 repo_url: https://github.com/volfpeter/fasthx
 
 theme:
-  name: modern
   palette:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
