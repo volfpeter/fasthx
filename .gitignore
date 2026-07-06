@@ -163,4 +163,4 @@ cython_debug/
 uv.lock
 
 # Untracked folder for dev stuff
-dev
+dev/

@@ -1,10 +1,12 @@
 import pytest
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from fastapi.testclient import TestClient
 from htmy import StreamingRenderer
+from htmy.jinja import JinjaTemplates as HTMYJinjaTemplates
 
-from fasthx.htmy import HTMY, ComponentHeader
+from fasthx.htmy import HTMY, ComponentHeader, JinjaTemplate, RouteParams
 
 from .data import (
     DependsRandomNumber,
@@ -23,14 +25,22 @@ billy_html_paragraph = "<p >Billy Shears (active=True)</p>"
 billy_html_span = "<span >Billy Shears (active=True)</span>"
 user_list_html = "<ul >\n<li >Billy Shears (active=True)</li>\n<li >Lucy (active=True)</li>\n</ul>"
 
+_jinja_templates = HTMYJinjaTemplates(
+    Jinja2Templates(
+        "tests/templates",
+        context_processors=[lambda _request: {"extra": "from_processor"}],
+    )
+)
+
 
 def make_test_app(*, stream: bool) -> FastAPI:  # noqa: C901
     app = FastAPI()
 
+    request_processors = [*RequestProcessors.all(), lambda _request: _jinja_templates.to_context()]
     htmy = (
-        HTMY(StreamingRenderer(), request_processors=RequestProcessors.all(), stream=True)
+        HTMY(StreamingRenderer(), request_processors=request_processors, stream=True)
         if stream
-        else HTMY(request_processors=RequestProcessors.all())
+        else HTMY(request_processors=request_processors)
     )
     no_data_htmy = HTMY(StreamingRenderer(), no_data=True, stream=True) if stream else HTMY(no_data=True)
     no_data_htmy.request_processors.extend(RequestProcessors.all())
@@ -138,6 +148,21 @@ def make_test_app(*, stream: bool) -> FastAPI:  # noqa: C901
     async def render_component(request: Request) -> HTMLResponse:
         return HTMLResponse(await htmy.render_component(UserListItem(billy), request))
 
+    @app.get("/jinja", response_model=None)
+    @htmy.page()  # type: ignore[arg-type]
+    def jinja() -> JinjaTemplate:
+        # Verifies request injection, context processors, and empty route_params.
+        return JinjaTemplate("htmy.jinja")
+
+    @app.get("/jinja/{name}", response_model=None)
+    @htmy.page()  # type: ignore[arg-type]
+    def jinja_with_route_params(name: str) -> JinjaTemplate:
+        # Verifies route_params injection and make_context forwarding.
+        return JinjaTemplate(
+            "htmy.jinja",
+            make_context=lambda ctx: {"extra": RouteParams.from_context(ctx).get("name")},
+        )
+
     return app
 
 
@@ -223,6 +248,22 @@ def client(*, stream: bool) -> TestClient:
         ("/global-no-data", None, 400, "", {}),
         # Direct component rendering
         ("/render-component", None, 200, "<li >Billy Shears (active=True)</li>", {}),
+        # JinjaTemplate: request, context processor, and empty route_params.
+        (
+            "/jinja",
+            None,
+            200,
+            "url=http://testserver/\nroute=\nextra=from_processor",
+            {},
+        ),
+        # JinjaTemplate: route_params injection and make_context forwarding.
+        (
+            "/jinja/billy",
+            None,
+            200,
+            "url=http://testserver/\nroute=billy\nextra=billy",
+            {},
+        ),
     ),
 )
 def test_htmy(

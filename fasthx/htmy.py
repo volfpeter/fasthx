@@ -5,7 +5,10 @@ from dataclasses import KW_ONLY, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeAlias, overload
 
 from fastapi import Request
+from fastapi.templating import Jinja2Templates
 from htmy import Component, Context, Renderer
+from htmy.jinja import JinjaTemplate as _JinjaTemplate
+from htmy.jinja import JinjaTemplates
 from htmy.renderer import is_streaming_renderer
 
 from .component_selectors import ComponentHeader as _ComponentHeader
@@ -21,7 +24,9 @@ if TYPE_CHECKING:
     from .typing import P, RenderFunction, StreamingRenderFunction
 
 RequestProcessor: TypeAlias = Callable[[Request], Context]
+
 HTMYComponentFactory: TypeAlias = Callable[[T], Component]
+
 HTMYComponentSelector: TypeAlias = ComponentSelector[HTMYComponentFactory[T]]
 
 
@@ -103,6 +108,37 @@ class RouteParams:
             return result
 
         raise TypeError(f"Invalid context data type for {cls.__name__}.")
+
+
+class JinjaTemplate(_JinjaTemplate):
+    """
+    `htmy.jinja.JinjaTemplate` subclass with FastHX, Starlette, and FastAPI customizations.
+
+    In addition to the Jinja context created by `htmy.jinja.JinjaTemplates`, this subclass
+    injects the following Jinja context entries:
+
+    - `request`: The current FastAPI `Request`.
+    - `route_params`: FastAPI route params (resolved dependencies), see `RouteParams` for details.
+    - The return value of all context processors registered in the Starlette/FastAPI `Jinja2Templates`
+      instance if this is the used instead of `jinja2.Environment`. This matches the behavior of
+      `Jinja2Templates.TemplateResponse` from Starlette/FastAPI.
+    """
+
+    __slots__ = ()
+
+    def _build_context(self, htmy_context: Context) -> dict[str, Any]:
+        result = super()._build_context(htmy_context)
+
+        request: Request = CurrentRequest.from_context(htmy_context)
+        result.setdefault("request", request)
+        result["route_params"] = RouteParams.from_context(htmy_context)
+
+        source = JinjaTemplates.from_context(htmy_context).source
+        if isinstance(source, Jinja2Templates):
+            for cp in source.context_processors:
+                result.update(cp(request))
+
+        return result
 
 
 @dataclass(frozen=True, slots=True)
