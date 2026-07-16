@@ -5,7 +5,6 @@ from dataclasses import KW_ONLY, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeAlias, overload
 
 from fastapi import Request
-from fastapi.templating import Jinja2Templates
 from htmy import Component, Context, Renderer
 from htmy.jinja import JinjaTemplate as _JinjaTemplate
 from htmy.jinja import JinjaTemplates
@@ -127,6 +126,10 @@ class JinjaTemplate(_JinjaTemplate):
     __slots__ = ()
 
     def _build_context(self, htmy_context: Context) -> dict[str, Any]:
+        # This imports the entire jinja2 library if installed.
+        # Do it lazily so the import is not attempted when someone imports from this module.
+        from fastapi.templating import Jinja2Templates
+
         result = super()._build_context(htmy_context)
 
         request: Request = CurrentRequest.from_context(htmy_context)
