@@ -134,7 +134,7 @@ class JinjaTemplate(_JinjaTemplate):
 
         request: Request = CurrentRequest.from_context(htmy_context)
         result.setdefault("request", request)
-        result["route_params"] = RouteParams.from_context(htmy_context)
+        result["route_params"] = RouteParams.from_context(htmy_context).params
 
         source = JinjaTemplates.from_context(htmy_context).source
         if isinstance(source, Jinja2Templates):
