@@ -93,12 +93,12 @@ def make_test_app(*, stream: bool) -> FastAPI:  # noqa: C901
         return billy
 
     @app.get("/hx-no-selector", response_model=None)
-    @htmy.hx()  # type: ignore[arg-type]  # HelloWorld is a component, render it as is.
+    @htmy.hx()  # HelloWorld is a component, render it as is.
     def hx_no_selector() -> HelloWorld:
         return HelloWorld()
 
     @app.get("/page-no-selector", response_model=None)
-    @htmy.page()  # type: ignore[arg-type]  # HelloWorld is a component, render it as is.
+    @htmy.page()  # HelloWorld is a component, render it as is.
     def page_no_selector() -> HelloWorld:
         return HelloWorld()
 
@@ -149,13 +149,13 @@ def make_test_app(*, stream: bool) -> FastAPI:  # noqa: C901
         return HTMLResponse(await htmy.render_component(UserListItem(billy), request))
 
     @app.get("/jinja", response_model=None)
-    @htmy.page()  # type: ignore[arg-type]
+    @htmy.page()
     def jinja() -> JinjaTemplate:
         # Verifies request injection, context processors, and empty route_params.
         return JinjaTemplate("htmy.jinja")
 
     @app.get("/jinja/{name}", response_model=None)
-    @htmy.page()  # type: ignore[arg-type]
+    @htmy.page()
     def jinja_with_route_params(name: str) -> JinjaTemplate:
         # Verifies route_params injection and make_context forwarding.
         return JinjaTemplate(

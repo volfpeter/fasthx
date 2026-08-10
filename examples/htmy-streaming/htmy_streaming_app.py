@@ -20,7 +20,7 @@ async def slow_list_item(value: ComponentType, _: Context) -> ComponentType:
 
 
 @app.get("/")
-@htmy.page()  # type: ignore[arg-type]
+@htmy.page()
 def index() -> Component:
     """The index page route."""
     return (

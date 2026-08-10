@@ -281,8 +281,7 @@ class Jinja:
                 error_template, make_context=make_context, prefix=prefix, error_renderer=True
             )
         )
-        # TODO: check why mypy doesn't resolve the generics correctly.
-        return hx(render_func, render_error=error_render_func, no_data=self.no_data or no_data)  # type: ignore[return-value]
+        return hx(render_func, render_error=error_render_func, no_data=self.no_data or no_data)
 
     def page(
         self,
@@ -318,8 +317,7 @@ class Jinja:
                 error_renderer=True,
             )
         )
-        # TODO: check why mypy doesn't resolve the generics correctly.
-        return page(render_func, render_error=error_render_func)  # type: ignore[return-value]
+        return page(render_func, render_error=error_render_func)
 
     def _make_render_function(
         self,
