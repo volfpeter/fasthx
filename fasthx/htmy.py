@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from .core_decorators import HXReturnType, PageReturnType
-    from .typing import P, RenderFunction, StreamingRenderFunction
+    from .typing import RenderFunction, StreamingRenderFunction
 
 RequestProcessor: TypeAlias = Callable[[Request], Context]
 
@@ -182,6 +182,26 @@ class HTMY:
     If set, the response will be streamed if the renderer supports it.
     """
 
+    @overload
+    def hx(
+        self,
+        component_selector: None = None,
+        *,
+        error_component_selector: HTMYComponentSelector[Exception] | None = None,
+        no_data: bool = False,
+        stream: bool | None = None,
+    ) -> HXReturnType[Component]: ...
+
+    @overload
+    def hx(
+        self,
+        component_selector: HTMYComponentSelector[T],
+        *,
+        error_component_selector: HTMYComponentSelector[Exception] | None = None,
+        no_data: bool = False,
+        stream: bool | None = None,
+    ) -> HXReturnType[T]: ...
+
     def hx(
         self,
         component_selector: HTMYComponentSelector[T] | None = None,
@@ -189,7 +209,7 @@ class HTMY:
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         no_data: bool = False,
         stream: bool | None = None,
-    ) -> HXReturnType[P, T]:
+    ) -> HXReturnType[T]:
         """
         Decorator for rendering the route's result if the request was an HTMX one.
 
@@ -233,13 +253,31 @@ class HTMY:
                 no_data=self.no_data or no_data,
             )
 
+    @overload
+    def page(
+        self,
+        component_selector: None = None,
+        *,
+        error_component_selector: HTMYComponentSelector[Exception] | None = None,
+        stream: bool | None = None,
+    ) -> PageReturnType[Component]: ...
+
+    @overload
+    def page(
+        self,
+        component_selector: HTMYComponentSelector[T],
+        *,
+        error_component_selector: HTMYComponentSelector[Exception] | None = None,
+        stream: bool | None = None,
+    ) -> PageReturnType[T]: ...
+
     def page(
         self,
         component_selector: HTMYComponentSelector[T] | None = None,
         *,
         error_component_selector: HTMYComponentSelector[Exception] | None = None,
         stream: bool | None = None,
-    ) -> PageReturnType[P, T]:
+    ) -> PageReturnType[T]:
         """
         Decorator for rendering a route's result.
 

@@ -1,20 +1,22 @@
 import inspect
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Literal, TypeAlias, cast, overload
+from typing import Literal, Protocol, cast, overload
 
 from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from .dependencies import DependsHXRequest, DependsPageRequest
-from .typing import MaybeAsyncFunc, P, RenderFunction, StreamingRenderFunction, T
+from .typing import MaybeAsyncFunc, P, RenderFunction, StreamingRenderFunction, T, Tcontra
 from .utils import append_to_signature, execute_maybe_sync_func, get_response
 
 # -- Rendering decorators
 
-HXReturnType: TypeAlias = Callable[
-    [MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, T | Response]]
-]
+
+class HXReturnType(Protocol[T]):
+    def __call__(
+        self, func: MaybeAsyncFunc[P, T | Response], /
+    ) -> Callable[P, Coroutine[None, None, T | Response]]: ...
 
 
 @overload
@@ -24,7 +26,7 @@ def hx(
     no_data: bool = False,
     render_error: StreamingRenderFunction[Exception] | None = None,
     stream: Literal[True],
-) -> HXReturnType[P, T]: ...
+) -> HXReturnType[T]: ...
 
 
 @overload
@@ -34,7 +36,7 @@ def hx(
     no_data: bool = False,
     render_error: RenderFunction[Exception] | None = None,
     stream: Literal[False] = False,
-) -> HXReturnType[P, T]: ...
+) -> HXReturnType[T]: ...
 
 
 def hx(
@@ -43,7 +45,7 @@ def hx(
     no_data: bool = False,
     render_error: RenderFunction[Exception] | StreamingRenderFunction[Exception] | None = None,
     stream: bool = False,
-) -> HXReturnType[P, T]:
+) -> HXReturnType[T]:
     """
     Decorator that converts a FastAPI route's return value into HTML if the request was
     an HTMX one.
@@ -128,9 +130,10 @@ def hx(
     return decorator
 
 
-PageReturnType: TypeAlias = Callable[
-    [MaybeAsyncFunc[P, T | Response]], Callable[P, Coroutine[None, None, Response]]
-]
+class PageReturnType(Protocol[Tcontra]):
+    def __call__(
+        self, func: MaybeAsyncFunc[P, Tcontra | Response], /
+    ) -> Callable[P, Coroutine[None, None, Response]]: ...
 
 
 @overload
@@ -139,7 +142,7 @@ def page(
     *,
     render_error: StreamingRenderFunction[Exception] | None = None,
     stream: Literal[True],
-) -> PageReturnType[P, T]: ...
+) -> PageReturnType[T]: ...
 
 
 @overload
@@ -148,7 +151,7 @@ def page(
     *,
     render_error: RenderFunction[Exception] | None = None,
     stream: Literal[False] = False,
-) -> PageReturnType[P, T]: ...
+) -> PageReturnType[T]: ...
 
 
 def page(
@@ -156,7 +159,7 @@ def page(
     *,
     render_error: RenderFunction[Exception] | StreamingRenderFunction[Exception] | None = None,
     stream: bool = False,
-) -> PageReturnType[P, T]:
+) -> PageReturnType[T]:
     """
     Decorator that converts a FastAPI route's return value into HTML.
 
