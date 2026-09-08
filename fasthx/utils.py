@@ -1,4 +1,5 @@
 import inspect
+import sys
 from collections.abc import Callable, Mapping
 from typing import Any, cast
 
@@ -9,6 +10,24 @@ from .typing import MaybeAsyncFunc, P, T
 
 _default = object()
 """Safe default value placeholder."""
+
+
+def _get_signature(func: Callable[..., Any]) -> inspect.Signature:
+    """
+    Return the signature of `func`.
+
+    Annotations are evaluated when possible. Unresolvable ones are left as
+    strings or forward references.
+    """
+    try:
+        return inspect.signature(func, eval_str=True)
+    except NameError:
+        if sys.version_info >= (3, 14):
+            from annotationlib import Format
+
+            return inspect.signature(func, annotation_format=Format.FORWARDREF)
+
+        return inspect.signature(func)
 
 
 def append_to_signature(
@@ -35,7 +54,7 @@ def append_to_signature(
     Returns:
         The received function with an extended `__signature__`.
     """
-    signature = inspect.signature(func, eval_str=True)
+    signature = _get_signature(func)
     func.__signature__ = signature.replace(  # type: ignore[attr-defined]
         parameters=(*signature.parameters.values(), *params),
         return_annotation=signature.return_annotation
