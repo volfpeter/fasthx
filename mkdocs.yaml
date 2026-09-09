@@ -30,8 +30,6 @@ theme:
     - search.highlight
 
 plugins:
-  - search:
-      lang: en
   - mkdocstrings:
       handlers:
         python:
