@@ -6,9 +6,9 @@ from typing import Literal, Protocol, cast, overload
 from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-from .dependencies import DependsHXRequest, DependsPageRequest
+from .dependencies import DependsHXRequest, DependsPageRequest, DependsResponse
 from .typing import MaybeAsyncFunc, P, RenderFunction, StreamingRenderFunction, T, Tcontra
-from .utils import append_to_signature, execute_maybe_sync_func, get_response
+from .utils import append_to_signature, execute_maybe_sync_func
 
 # -- Rendering decorators
 
@@ -67,7 +67,10 @@ def hx(
     ) -> Callable[P, Coroutine[None, None, T | Response]]:
         @wraps(func)
         async def wrapper(
-            __hx_request: DependsHXRequest, *args: P.args, **kwargs: P.kwargs
+            __hx_request: DependsHXRequest,
+            __hx_response: DependsResponse,
+            *args: P.args,
+            **kwargs: P.kwargs,
         ) -> T | Response:
             if no_data and __hx_request is None:
                 raise HTTPException(
@@ -89,7 +92,6 @@ def hx(
             if __hx_request is None or isinstance(result, Response):
                 return result
 
-            response = get_response(kwargs)
             if stream:
                 renderer = cast(StreamingRenderFunction[T | Exception], renderer)
                 content_stream = renderer(result, context=kwargs, request=__hx_request)
@@ -98,10 +100,10 @@ def hx(
                     content_stream,
                     # The default status code of the FastAPI Response dependency is None
                     # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
+                    status_code=__hx_response.status_code or 200,
+                    headers=__hx_response.headers,
                     media_type="text/html",
-                    background=getattr(response, "background", None),
+                    background=__hx_response.background,
                 )
             else:
                 renderer = cast(RenderFunction[T | Exception], renderer)
@@ -113,9 +115,9 @@ def hx(
                     rendered,
                     # The default status code of the FastAPI Response dependency is None
                     # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
-                    background=getattr(response, "background", None),
+                    status_code=__hx_response.status_code or 200,
+                    headers=__hx_response.headers,
+                    background=__hx_response.background,
                 )
 
         return append_to_signature(
@@ -124,6 +126,11 @@ def hx(
                 "__hx_request",
                 inspect.Parameter.KEYWORD_ONLY,
                 annotation=DependsHXRequest,
+            ),
+            inspect.Parameter(
+                "__hx_response",
+                inspect.Parameter.KEYWORD_ONLY,
+                annotation=DependsResponse,
             ),
         )
 
@@ -174,7 +181,10 @@ def page(
     def decorator(func: MaybeAsyncFunc[P, T | Response]) -> Callable[P, Coroutine[None, None, Response]]:
         @wraps(func)
         async def wrapper(
-            __page_request: DependsPageRequest, *args: P.args, **kwargs: P.kwargs
+            __page_request: DependsPageRequest,
+            __page_response: DependsResponse,
+            *args: P.args,
+            **kwargs: P.kwargs,
         ) -> Response:
             try:
                 result = await execute_maybe_sync_func(func, *args, **kwargs)
@@ -189,8 +199,6 @@ def page(
             if isinstance(result, Response):
                 return result
 
-            response = get_response(kwargs)
-
             if stream:
                 renderer = cast(StreamingRenderFunction[T | Exception], renderer)
                 content_stream = renderer(result, context=kwargs, request=__page_request)
@@ -199,10 +207,10 @@ def page(
                     content_stream,
                     # The default status code of the FastAPI Response dependency is None
                     # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
+                    status_code=__page_response.status_code or 200,
+                    headers=__page_response.headers,
                     media_type="text/html",
-                    background=getattr(response, "background", None),
+                    background=__page_response.background,
                 )
             else:
                 renderer = cast(RenderFunction[T | Exception], renderer)
@@ -214,9 +222,9 @@ def page(
                     rendered,
                     # The default status code of the FastAPI Response dependency is None
                     # (not allowed by the typing but required for FastAPI).
-                    status_code=getattr(response, "status_code", 200) or 200,
-                    headers=getattr(response, "headers", None),
-                    background=getattr(response, "background", None),
+                    status_code=__page_response.status_code or 200,
+                    headers=__page_response.headers,
+                    background=__page_response.background,
                 )
 
         return append_to_signature(
@@ -225,6 +233,11 @@ def page(
                 "__page_request",
                 inspect.Parameter.KEYWORD_ONLY,
                 annotation=DependsPageRequest,
+            ),
+            inspect.Parameter(
+                "__page_response",
+                inspect.Parameter.KEYWORD_ONLY,
+                annotation=DependsResponse,
             ),
             # Override the return annotation to Response to prevent FastAPI from
             # trying to resolve the return type, it will be converted to a Response

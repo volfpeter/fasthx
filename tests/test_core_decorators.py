@@ -3,7 +3,7 @@ from __future__ import annotations  # Tests https://github.com/volfpeter/fasthx/
 from typing import Any
 
 import pytest
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.testclient import TestClient
 
 from fasthx import hx, page
@@ -37,6 +37,10 @@ def render_data_error(result: Exception, *, context: dict[str, Any], request: Re
     raise result
 
 
+def set_test_header(response: Response) -> None:
+    response.headers["test-header"] = "exists"
+
+
 @pytest.fixture
 def hx_app() -> FastAPI:  # noqa: C901
     app = FastAPI()
@@ -44,7 +48,7 @@ def hx_app() -> FastAPI:  # noqa: C901
     @app.get("/")
     @page(render_user_list)
     def index(
-        request: Request,  # Testing workaround for FastAPI bug. https://github.com/fastapi/fastapi/pull/12406
+        request: Request,  # Tests that it doesn't conflict with the decorator's Request dependency.
         random_number: DependsRandomNumber,
     ) -> list[User]:
         return users
@@ -52,7 +56,7 @@ def hx_app() -> FastAPI:  # noqa: C901
     @app.get("/htmx-or-data")
     @hx(render_user_list)
     def htmx_or_data(
-        request: Request,  # Testing workaround for FastAPI bug. https://github.com/fastapi/fastapi/pull/12406
+        request: Request,  # Tests that it doesn't conflict with the decorator's Request dependency.
         random_number: DependsRandomNumber,
         response: Response,
     ) -> list[User]:
@@ -65,6 +69,16 @@ def hx_app() -> FastAPI:  # noqa: C901
     @app.get("/htmx-only")
     @hx(async_render_user_list, no_data=True)  # type: ignore[arg-type]
     async def htmx_only(random_number: DependsRandomNumber) -> list[User]:
+        return users
+
+    @app.get("/dependency-header-hx", dependencies=[Depends(set_test_header)])
+    @hx(render_user_list)  # type: ignore[arg-type]
+    def dependency_header_hx(random_number: DependsRandomNumber) -> list[User]:
+        return users
+
+    @app.get("/dependency-header-page", dependencies=[Depends(set_test_header)])
+    @page(render_user_list)  # type: ignore[arg-type]
+    def dependency_header_page(random_number: DependsRandomNumber) -> list[User]:
         return users
 
     @app.get("/error/{kind}")
@@ -139,6 +153,14 @@ def test_hx_and_page(
     assert result == expected
 
     assert all((response.headers.get(key) == value) for key, value in response_headers.items())
+
+
+@pytest.mark.parametrize("route", ("/dependency-header-hx", "/dependency-header-page"))
+def test_hx_and_page_keep_dependency_response_headers(hx_client: TestClient, route: str) -> None:
+    response = hx_client.get(route, headers={"HX-Request": "true"})
+    assert response.status_code == 200
+    assert response.text == user_list_html
+    assert response.headers.get("test-header") == "exists"
 
 
 @pytest.mark.parametrize(

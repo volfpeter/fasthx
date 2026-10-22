@@ -1,26 +1,9 @@
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Annotated, Any, TypeAlias
+from typing import Annotated
 
-from fastapi import Depends, Header
-from fastapi import Request as FARequest
-
-if TYPE_CHECKING:
-    Request: TypeAlias = FARequest
-else:
-    Request: TypeAlias = Mapping[str, Any]
-    """
-    Alias for `Request` arguments.
-
-    Workaround for this FastAPI bug: https://github.com/fastapi/fastapi/discussions/12403.
-    And here's a FastAPI bugfix: https://github.com/fastapi/fastapi/pull/12406.
-
-    This workaround should be removed when FastAPI had several new releases with the fix.
-    """
+from fastapi import Depends, Header, Request, Response
 
 
-def get_hx_request(
-    request: FARequest, hx_request: Annotated[str | None, Header()] = None
-) -> Request | None:
+def get_hx_request(request: Request, hx_request: Annotated[str | None, Header()] = None) -> Request | None:
     """
     FastAPI dependency that returns the current request if it is an HTMX one,
     i.e. it contains an `"HX-Request: true"` header.
@@ -28,12 +11,20 @@ def get_hx_request(
     return request if hx_request == "true" else None
 
 
-def get_page_request(request: FARequest) -> Request:
+def get_page_request(request: Request) -> Request:
     """
     Replacement dependency for `Request` to work around this FastAPI bug:
     https://github.com/fastapi/fastapi/discussions/12403.
     """
     return request
+
+
+def get_response(response: Response) -> Response:
+    """
+    Replacement dependency for `Response` to work around this FastAPI bug:
+    https://github.com/fastapi/fastapi/discussions/12403.
+    """
+    return response
 
 
 DependsHXRequest = Annotated[Request | None, Depends(get_hx_request)]
@@ -42,6 +33,13 @@ DependsHXRequest = Annotated[Request | None, Depends(get_hx_request)]
 DependsPageRequest = Annotated[Request, Depends(get_page_request)]
 """
 Annotated `Request` dependency alias.
+
+Workaround for this FastAPI bug: https://github.com/fastapi/fastapi/discussions/12403
+"""
+
+DependsResponse = Annotated[Response, Depends(get_response)]
+"""
+Annotated `Response` dependency alias.
 
 Workaround for this FastAPI bug: https://github.com/fastapi/fastapi/discussions/12403
 """
