@@ -7,7 +7,16 @@ from fastapi import HTTPException, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from .dependencies import DependsHXRequest, DependsPageRequest, DependsResponse
-from .typing import MaybeAsyncFunc, P, RenderFunction, StreamingRenderFunction, T, Tcontra
+from .typing import (
+    AsyncRenderFunction,
+    MaybeAsyncFunc,
+    P,
+    RenderFunction,
+    StreamingRenderFunction,
+    SyncRenderFunction,
+    T,
+    Tcontra,
+)
 from .utils import append_to_signature, execute_maybe_sync_func
 
 # -- Rendering decorators
@@ -31,7 +40,17 @@ def hx(
 
 @overload
 def hx(
-    render: RenderFunction[T],
+    render: SyncRenderFunction[T],
+    *,
+    no_data: bool = False,
+    render_error: RenderFunction[Exception] | None = None,
+    stream: Literal[False] = False,
+) -> HXReturnType[T]: ...
+
+
+@overload
+def hx(
+    render: AsyncRenderFunction[T],
     *,
     no_data: bool = False,
     render_error: RenderFunction[Exception] | None = None,
@@ -154,7 +173,16 @@ def page(
 
 @overload
 def page(
-    render: RenderFunction[T],
+    render: SyncRenderFunction[T],
+    *,
+    render_error: RenderFunction[Exception] | None = None,
+    stream: Literal[False] = False,
+) -> PageReturnType[T]: ...
+
+
+@overload
+def page(
+    render: AsyncRenderFunction[T],
     *,
     render_error: RenderFunction[Exception] | None = None,
     stream: Literal[False] = False,
