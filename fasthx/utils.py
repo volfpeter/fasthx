@@ -1,9 +1,8 @@
 import inspect
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import Any, cast
 
-from fastapi import Response
 from fastapi.concurrency import run_in_threadpool
 
 from .typing import MaybeAsyncFunc, P, T
@@ -78,17 +77,3 @@ async def execute_maybe_sync_func(func: MaybeAsyncFunc[P, T], *args: P.args, **k
         return await func(*args, **kwargs)  # type: ignore[no-any-return]
 
     return await run_in_threadpool(cast(Callable[P, T], func), *args, **kwargs)
-
-
-def get_response(kwargs: Mapping[str, Any]) -> Response | None:
-    """
-    Returns the first `Response` instance from the values in `kwargs` (if there is one).
-
-    Arguments:
-        kwargs: The keyword arguments from which the `Response` should be returned.
-    """
-    for val in kwargs.values():
-        if isinstance(val, Response):
-            return val
-
-    return None
