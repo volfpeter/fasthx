@@ -63,26 +63,23 @@ def hx_app() -> FastAPI:  # noqa: C901
         response.headers["test-header"] = "exists"
         return users
 
-    # There's a strange mypy issue here, it finds errors for the routes that defined later,
-    # regardless of the order. It seems it fails to resolve and match generic types.
-
     @app.get("/htmx-only")
-    @hx(async_render_user_list, no_data=True)  # type: ignore[arg-type]
+    @hx(async_render_user_list, no_data=True)
     async def htmx_only(random_number: DependsRandomNumber) -> list[User]:
         return users
 
     @app.get("/dependency-header-hx", dependencies=[Depends(set_test_header)])
-    @hx(render_user_list)  # type: ignore[arg-type]
+    @hx(render_user_list)
     def dependency_header_hx(random_number: DependsRandomNumber) -> list[User]:
         return users
 
     @app.get("/dependency-header-page", dependencies=[Depends(set_test_header)])
-    @page(render_user_list)  # type: ignore[arg-type]
+    @page(render_user_list)
     def dependency_header_page(random_number: DependsRandomNumber) -> list[User]:
         return users
 
     @app.get("/error/{kind}")
-    @hx(render_user_list, render_error=render_data_error)  # type: ignore[arg-type]
+    @hx(render_user_list, render_error=render_data_error)
     def error_in_route(kind: str, response: Response) -> list[User]:
         if kind == "data":
             raise DataError("test-message", response)
@@ -92,7 +89,7 @@ def hx_app() -> FastAPI:  # noqa: C901
         return users
 
     @app.get("/error-no-data/{kind}")
-    @hx(render_user_list, render_error=render_data_error, no_data=True)  # type: ignore[arg-type]
+    @hx(render_user_list, render_error=render_data_error, no_data=True)
     def error_in_route_no_data(kind: str, response: Response) -> list[User]:
         if kind == "data":
             raise DataError("test-message", response)
@@ -102,7 +99,7 @@ def hx_app() -> FastAPI:  # noqa: C901
         return users
 
     @app.get("/error-page/{kind}")
-    @page(render_user_list, render_error=render_data_error)  # type: ignore[arg-type]
+    @page(render_user_list, render_error=render_data_error)
     def error_in_route_page(kind: str, response: Response) -> list[User]:
         if kind == "data":
             raise DataError("test-message", response)
